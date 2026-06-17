@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transcriptor de conferencias de prensa</title>
+<title>Transcriptor de audio</title>
 <style>
   [data-theme="dark"]{
     --bg:#0E1015; --card:#171A21; --panel:#1E222B; --transcript:#12151B;
@@ -14,7 +14,7 @@
     --shadow:0 16px 40px -18px rgba(0,0,0,.7);
     --err-bg:rgba(242,106,106,.12); --err-bd:rgba(242,106,106,.40); --err-tx:#F6A6A6;
     --info-bg:rgba(111,90,253,.13); --info-bd:rgba(111,90,253,.42); --info-tx:#C5BCFF;
-    --pillbg:#1E222B;
+    --pillbg:#1E222B; --tabactive:#2A2F3A;
   }
   [data-theme="light"]{
     --bg:#F5F6FB; --card:#FFFFFF; --panel:#F7F8FC; --transcript:#FFFFFF;
@@ -25,37 +25,17 @@
     --shadow:0 12px 32px -14px rgba(15,23,42,.20);
     --err-bg:#FEF2F2; --err-bd:#FECACA; --err-tx:#991B1B;
     --info-bg:#F1EFFE; --info-bd:#DDD6FE; --info-tx:#4338CA;
-    --pillbg:#FFFFFF;
+    --pillbg:#FFFFFF; --tabactive:#FFFFFF;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--ink);
-    -webkit-font-smoothing:antialiased; padding:24px 16px;
-    transition:background .25s ease,color .25s ease;
-  }
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding:24px 16px;transition:background .25s ease,color .25s ease;}
   .wrap{max-width:760px;margin:0 auto;}
-  .card{
-    background:var(--card); border:1px solid var(--line); border-radius:18px;
-    overflow:hidden; box-shadow:var(--shadow);
-    transition:background .25s ease,border-color .25s ease;
-  }
-  .head{
-    background:linear-gradient(125deg,#5B46E0 0%,#6F5AFD 58%,#8B7BFF 100%);
-    color:#fff; padding:20px 22px; display:flex; align-items:center; gap:14px;
-  }
-  .head .ic{
-    width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.16);
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);transition:background .25s ease,border-color .25s ease;}
+  .head{background:linear-gradient(125deg,#5B46E0 0%,#6F5AFD 58%,#8B7BFF 100%);color:#fff;padding:20px 22px;display:flex;align-items:center;gap:14px;}
+  .head .ic{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .head h1{font-size:18px;margin:0 0 2px;font-weight:650;letter-spacing:.2px;}
   .head p{margin:0;font-size:13px;opacity:.88;}
-  .theme-btn{
-    margin-left:auto;width:40px;height:40px;border-radius:11px;border:none;
-    background:rgba(255,255,255,.16);color:#fff;cursor:pointer;flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;transition:.15s ease;
-  }
+  .theme-btn{margin-left:auto;width:40px;height:40px;border-radius:11px;border:none;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s ease;}
   .theme-btn:hover{background:rgba(255,255,255,.28);}
   .body{padding:22px 24px;}
 
@@ -67,31 +47,45 @@
   .bclose{margin-left:auto;background:none;border:none;color:inherit;font-size:20px;line-height:1;cursor:pointer;opacity:.65;padding:0 2px;}
   .bclose:hover{opacity:1;}
 
-  .toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .modes{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px;margin-bottom:12px;}
+  .mode-tab{flex:1;padding:10px 6px;border-radius:8px;background:transparent;color:var(--muted);font-weight:600;font-size:13.5px;border:none;cursor:pointer;transition:.15s ease;}
+  .mode-tab.active{background:var(--tabactive);color:var(--ink);box-shadow:0 1px 5px rgba(0,0,0,.15);}
+  .mode-tab:disabled{opacity:.5;cursor:not-allowed;}
+  .mode-desc{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 2px 18px;}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
+  .left-fields{display:flex;gap:14px;flex-wrap:wrap;}
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600;}
-  select{
-    appearance:none;background-color:var(--panel);color:var(--ink);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2399A2B2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 12px center;
-    border:1px solid var(--line);border-radius:10px;padding:9px 34px 9px 12px;
-    font-size:14px;min-width:210px;cursor:pointer;
-  }
+  select{appearance:none;background-color:var(--panel);color:var(--ink);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2399A2B2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;border:1px solid var(--line);border-radius:10px;padding:9px 34px 9px 12px;font-size:14px;min-width:180px;cursor:pointer;}
+  select:disabled{opacity:.6;cursor:not-allowed;}
   .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);cursor:pointer;user-select:none;}
   .toggle input{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;}
 
   .stage{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:16px;}
   .status{display:flex;align-items:center;gap:10px;}
   .dot{width:13px;height:13px;border-radius:50%;background:var(--muted);flex-shrink:0;}
-  .dot.rec{background:var(--red);box-shadow:0 0 0 0 rgba(242,106,106,.5);animation:pulse 1.4s infinite;}
+  .dot.rec{background:var(--red);animation:pulseR 1.4s infinite;}
   .dot.pause{background:var(--amber);}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(242,106,106,.5);}70%{box-shadow:0 0 0 12px rgba(242,106,106,0);}100%{box-shadow:0 0 0 0 rgba(242,106,106,0);}}
+  .dot.proc{background:var(--primary);animation:pulseP 1.4s infinite;}
+  @keyframes pulseR{0%{box-shadow:0 0 0 0 rgba(242,106,106,.5);}70%{box-shadow:0 0 0 12px rgba(242,106,106,0);}100%{box-shadow:0 0 0 0 rgba(242,106,106,0);}}
+  @keyframes pulseP{0%{box-shadow:0 0 0 0 rgba(111,90,253,.5);}70%{box-shadow:0 0 0 12px rgba(111,90,253,0);}100%{box-shadow:0 0 0 0 rgba(111,90,253,0);}}
   .status-txt{font-size:14px;font-weight:600;}
   .stats{display:flex;gap:10px;margin-left:auto;}
   .pill{background:var(--pillbg);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;}
   .pill b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:650;}
 
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+  .prog{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin-bottom:16px;}
+  .prog-top{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .prog-text{font-size:13px;color:var(--ink);font-weight:600;}
+  .prog-cancel{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;border-radius:8px;padding:5px 10px;cursor:pointer;}
+  .prog-cancel:hover{border-color:var(--red);color:var(--red);}
+  .bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden;}
+  .bar > i{display:block;height:100%;background:var(--primary);border-radius:99px;transition:width .3s ease;}
+  .bar.indet > i{width:35% !important;animation:indet 1.2s infinite ease-in-out;}
+  @keyframes indet{0%{margin-left:-35%;}100%{margin-left:100%;}}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
   button{font-family:inherit;cursor:pointer;border:none;border-radius:11px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;transition:.15s ease;}
   .btn-primary{padding:13px 22px;color:#fff;background:var(--primary);}
   .btn-primary:hover{background:var(--primary-strong);}
@@ -99,15 +93,23 @@
   .btn-primary.pausing:hover{background:var(--amber-strong);}
   .btn-primary.resuming{background:var(--secondary);}
   .btn-primary.resuming:hover{background:var(--secondary-strong);}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
   .btn-stop{padding:13px 18px;color:var(--red);background:transparent;border:1.5px solid var(--red);}
   .btn-stop:hover{background:var(--err-bg);}
-  .btn-ghost{padding:13px 16px;background:var(--panel);color:var(--ink);border:1px solid var(--line);}
+  .btn-ghost{padding:12px 16px;background:var(--panel);color:var(--ink);border:1px solid var(--line);}
   .btn-ghost:hover{border-color:var(--primary);}
   .btn-ghost.danger{color:var(--red);}
   .btn-ghost.danger:hover{border-color:var(--red);background:var(--err-bg);}
   button:disabled{opacity:.4;cursor:not-allowed;}
-  button:disabled:hover{border-color:var(--line);background:var(--panel);}
-  .sec-actions{margin-left:auto;display:flex;gap:10px;}
+  .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;}
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:26px 18px;text-align:center;cursor:pointer;transition:.15s ease;background:var(--panel);}
+  .drop:hover,.drop.drag{border-color:var(--primary);background:var(--info-bg);}
+  .drop svg{color:var(--muted);margin-bottom:8px;}
+  .drop-main{font-size:14px;font-weight:600;color:var(--ink);}
+  .drop-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+  .file-name{margin-top:10px;font-size:13px;color:var(--primary);font-weight:600;word-break:break-all;}
 
   .transcript{border:1px solid var(--line);border-radius:14px;background:var(--transcript);padding:18px 20px;min-height:200px;max-height:380px;overflow-y:auto;font-size:15.5px;line-height:1.7;color:var(--ink);}
   .transcript .placeholder{color:var(--placeholder);font-style:italic;}
@@ -116,285 +118,356 @@
 
   .note{margin-top:16px;font-size:12.5px;color:var(--muted);line-height:1.6;}
   .note b{color:var(--ink);}
+  .credit{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--muted);letter-spacing:.3px;}
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#0B0D12;color:#fff;padding:11px 18px;border-radius:10px;border-left:3px solid var(--secondary);font-size:13.5px;opacity:0;pointer-events:none;transition:.25s ease;z-index:50;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:640px){
+    body{padding:14px 10px;}
+    .head{padding:18px 16px;gap:12px;}
+    .head .ic{width:40px;height:40px;}
+    .head h1{font-size:16.5px;}
+    .head p{font-size:12px;}
+    .body{padding:18px 16px;}
+    .mode-tab{font-size:12.5px;padding:9px 4px;}
+    .toolbar{flex-direction:column;align-items:stretch;gap:14px;}
+    .left-fields{flex-direction:column;}
+    select{min-width:0;width:100%;}
+    .stage{flex-direction:column;align-items:stretch;gap:12px;}
+    .stats{margin-left:0;flex-wrap:wrap;}
+    .actions{flex-direction:column;align-items:stretch;gap:10px;}
+    .btn-primary,.btn-stop{width:100%;justify-content:center;}
+    .tools{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    .tools button{justify-content:center;padding:12px 6px;font-size:12.5px;}
+    .transcript{max-height:300px;}
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <div class="head">
-        <div class="ic">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        </div>
-        <div>
-          <h1>Transcriptor de conferencias de prensa</h1>
-          <p>Captura el audio del dispositivo y transcribe en tiempo real</p>
-        </div>
+        <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+        <div><h1>Transcriptor de audio</h1><p>Conferencias, juntas y reuniones transcritas</p></div>
         <button id="themeBtn" class="theme-btn" title="Cambiar de modo"><span id="themeIcon"></span></button>
       </div>
 
       <div class="body">
-        <div id="infobar" class="banner info">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span id="infoText"></span>
-          <button id="infoClose" class="bclose" aria-label="Cerrar">&times;</button>
+        <div id="infobar" class="banner info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span id="infoText"></span><button id="infoClose" class="bclose" aria-label="Cerrar">&times;</button></div>
+        <div id="banner" class="banner err"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="bannerText"></span></div>
+
+        <div class="modes">
+          <button class="mode-tab active" data-mode="mic">Micrófono</button>
+          <button class="mode-tab" data-mode="system">Audio del sistema</button>
+          <button class="mode-tab" data-mode="file">Subir archivo</button>
         </div>
-        <div id="banner" class="banner err">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="bannerText"></span>
-        </div>
+        <p id="modeDesc" class="mode-desc"></p>
 
         <div class="toolbar">
-          <div class="field">
-            <label for="lang">Idioma del audio</label>
-            <select id="lang">
-              <option value="es-MX">Español (México)</option>
-              <option value="es-ES">Español (España)</option>
-              <option value="es-AR">Español (Argentina)</option>
-              <option value="es-CO">Español (Colombia)</option>
-              <option value="en-US">Inglés (EE. UU.)</option>
-              <option value="en-GB">Inglés (Reino Unido)</option>
-            </select>
+          <div class="left-fields">
+            <div class="field">
+              <label for="lang">Idioma del audio</label>
+              <select id="lang">
+                <option value="es-MX">Español (México)</option>
+                <option value="es-ES">Español (España)</option>
+                <option value="es-AR">Español (Argentina)</option>
+                <option value="es-CO">Español (Colombia)</option>
+                <option value="en-US">Inglés (EE. UU.)</option>
+                <option value="en-GB">Inglés (Reino Unido)</option>
+              </select>
+            </div>
+            <div class="field" id="qualityField" style="display:none">
+              <label for="quality">Precisión</label>
+              <select id="quality">
+                <option value="Xenova/whisper-tiny">Rápida (menos precisa)</option>
+                <option value="Xenova/whisper-base" selected>Equilibrada</option>
+                <option value="Xenova/whisper-small">Alta (más lenta)</option>
+              </select>
+            </div>
           </div>
-          <label class="toggle" for="ts"><input type="checkbox" id="ts"> Mostrar marcas de tiempo</label>
+          <label class="toggle" for="ts"><input type="checkbox" id="ts"> Marcas de tiempo</label>
         </div>
 
         <div class="stage">
-          <div class="status">
-            <span id="dot" class="dot"></span>
-            <span id="statusTxt" class="status-txt">Listo para iniciar</span>
-          </div>
-          <div class="stats">
-            <span class="pill">Duración <b id="duration">00:00</b></span>
-            <span class="pill">Palabras <b id="words">0</b></span>
-          </div>
+          <div class="status"><span id="dot" class="dot"></span><span id="statusTxt" class="status-txt">Listo</span></div>
+          <div class="stats"><span class="pill">Duración <b id="duration">00:00</b></span><span class="pill">Palabras <b id="words">0</b></span></div>
         </div>
 
-        <div class="actions">
+        <div id="prog" class="prog">
+          <div class="prog-top"><span id="progText" class="prog-text"></span><button id="cancelBtn" class="prog-cancel">Cancelar</button></div>
+          <div id="progBarWrap" class="bar"><i id="progBar"></i></div>
+        </div>
+
+        <div id="ctrlMic" class="actions">
           <button id="primary" class="btn-primary"><span id="primaryIcon"></span><span id="primaryLabel">Iniciar grabación</span></button>
-          <button id="stop" class="btn-stop" style="display:none">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Detener
-          </button>
-          <div class="sec-actions">
-            <button id="copy" class="btn-ghost" disabled>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar
-            </button>
-            <button id="download" class="btn-ghost" disabled>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar .txt
-            </button>
-            <button id="clear" class="btn-ghost danger" disabled>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span id="clearLabel">Limpiar</span>
-            </button>
+          <button id="stop" class="btn-stop" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Detener</button>
+        </div>
+
+        <div id="ctrlSystem" style="display:none;margin-bottom:14px">
+          <button id="sysBtn" class="btn-primary" style="width:100%;justify-content:center"></button>
+          <p class="hint">Se abrirá la ventana para compartir. Elige la pestaña, ventana o pantalla y <b>marca la casilla "Compartir audio"</b>. El texto aparece al detener la captura.</p>
+        </div>
+
+        <div id="ctrlFile" style="display:none;margin-bottom:14px">
+          <div id="dropZone" class="drop">
+            <input type="file" id="fileInput" accept="audio/*" hidden>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="drop-main">Selecciona o arrastra un archivo de audio</div>
+            <div class="drop-sub">mp3, wav, m4a, ogg, flac y otros</div>
+            <div id="fileName" class="file-name"></div>
           </div>
+          <button id="transcribeFileBtn" class="btn-primary" disabled style="margin-top:12px;width:100%;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Transcribir archivo</button>
+        </div>
+
+        <div class="tools">
+          <button id="copy" class="btn-ghost" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar</button>
+          <button id="download" class="btn-ghost" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar .txt</button>
+          <button id="clear" class="btn-ghost danger" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span id="clearLabel">Limpiar</span></button>
         </div>
 
         <div id="transcript" class="transcript"><span class="placeholder">El texto transcrito aparecerá aquí...</span></div>
 
-        <p class="note">
-          <b>Para mejores resultados:</b> usa Chrome o Edge de escritorio, habla cerca del micrófono y procura poco ruido de fondo. El reconocimiento de voz del navegador requiere conexión a internet. Para capturar el audio de una transmisión, reprodúcela y deja el micrófono cerca de las bocinas.
-        </p>
+        <p id="note" class="note"></p>
+        <p class="credit">Diseñado por Jorge Vuelvas Lomelí</p>
       </div>
     </div>
   </div>
-
   <div id="toast" class="toast"></div>
 
 <script>
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var recognition = null, shouldRun = false, statusState = "idle";
-  var segments = [], interim = "", lang = "es-MX", showTimestamps = false;
-  var accumMs = 0, runningSince = null, timerInterval = null, confirmClear = false;
-  var theme = "dark";
-  var inIframe = false;
-  try { inIframe = (window.self !== window.top); } catch(e){ inIframe = true; }
-  var isFile = (location.protocol === "file:");
+  var recognition=null, shouldRun=false, statusState="idle";
+  var segments=[], interim="", showTimestamps=false;
+  var accumMs=0, runningSince=null, timerInterval=null, confirmClear=false;
+  var theme="dark", mode="mic";
+  var transcriber=null, loadedModel=null, transcribing=false, cancelFlag=false;
+  var capturing=false, sysRecorder=null, sysStream=null, sysChunks=[];
+  var selectedFile=null;
+  var inIframe=false; try{ inIframe=(window.self!==window.top); }catch(e){ inIframe=true; }
+  var isFile=(location.protocol==="file:");
 
-  var $ = function(id){ return document.getElementById(id); };
-  var dotEl=$("dot"), statusTxt=$("statusTxt"), durationEl=$("duration"), wordsEl=$("words");
-  var primaryBtn=$("primary"), primaryIcon=$("primaryIcon"), primaryLabel=$("primaryLabel");
-  var stopBtn=$("stop"), copyBtn=$("copy"), downloadBtn=$("download"), clearBtn=$("clear"), clearLabel=$("clearLabel");
-  var transcriptEl=$("transcript"), banner=$("banner"), bannerText=$("bannerText");
-  var infobar=$("infobar"), infoText=$("infoText"), infoClose=$("infoClose");
-  var toast=$("toast"), langSelect=$("lang"), tsToggle=$("ts");
-  var themeBtn=$("themeBtn"), themeIcon=$("themeIcon");
+  var $=function(id){return document.getElementById(id);};
+  var dotEl=$("dot"),statusTxt=$("statusTxt"),durationEl=$("duration"),wordsEl=$("words");
+  var primaryBtn=$("primary"),primaryIcon=$("primaryIcon"),primaryLabel=$("primaryLabel"),stopBtn=$("stop");
+  var copyBtn=$("copy"),downloadBtn=$("download"),clearBtn=$("clear"),clearLabel=$("clearLabel");
+  var transcriptEl=$("transcript"),banner=$("banner"),bannerText=$("bannerText");
+  var infobar=$("infobar"),infoText=$("infoText"),infoClose=$("infoClose"),toast=$("toast");
+  var langSelect=$("lang"),qualitySelect=$("quality"),qualityField=$("qualityField"),tsToggle=$("ts");
+  var themeBtn=$("themeBtn"),themeIcon=$("themeIcon");
+  var modeTabs=Array.prototype.slice.call(document.querySelectorAll(".mode-tab"));
+  var modeDesc=$("modeDesc"),noteEl=$("note");
+  var ctrlMic=$("ctrlMic"),ctrlSystem=$("ctrlSystem"),ctrlFile=$("ctrlFile");
+  var sysBtn=$("sysBtn"),dropZone=$("dropZone"),fileInput=$("fileInput"),fileName=$("fileName"),transcribeFileBtn=$("transcribeFileBtn");
+  var prog=$("prog"),progText=$("progText"),progBar=$("progBar"),progBarWrap=$("progBarWrap"),cancelBtn=$("cancelBtn");
 
   var MIC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>';
+  var SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>';
+  var STOPSQ='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
   var PAUSE='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
   var PLAY='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M7 5l12 7-12 7z"/></svg>';
   var SUN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>';
   var MOON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
 
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-  function fmtTime(total){total=Math.max(0,Math.floor(total));var s=total%60,m=Math.floor(total/60)%60,h=Math.floor(total/3600);var mm=("0"+m).slice(-2),ss=("0"+s).slice(-2);return h>0?(h+":"+mm+":"+ss):(mm+":"+ss);}
+  function fmtTime(t){t=Math.max(0,Math.floor(t));var s=t%60,m=Math.floor(t/60)%60,h=Math.floor(t/3600);var mm=("0"+m).slice(-2),ss=("0"+s).slice(-2);return h>0?(h+":"+mm+":"+ss):(mm+":"+ss);}
   function showError(msg){bannerText.textContent=msg;banner.classList.add("show");}
   function hideError(){banner.classList.remove("show");}
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");setTimeout(function(){toast.classList.remove("show");},1800);}
+  function setStatusUI(text,cls){statusTxt.textContent=text;dotEl.className="dot"+(cls?(" "+cls):"");}
+  function showProg(text,pct){prog.style.display="block";progText.textContent=text;if(pct==null){progBarWrap.classList.add("indet");progBar.style.width="35%";}else{progBarWrap.classList.remove("indet");progBar.style.width=pct+"%";}}
+  function hideProg(){prog.style.display="none";progBarWrap.classList.remove("indet");}
+  function whisperLang(){return langSelect.value.slice(0,2)==="en"?"english":"spanish";}
 
-  function applyTheme(t){
-    theme=t;
-    document.documentElement.setAttribute("data-theme",t);
-    themeIcon.innerHTML=(t==="dark")?SUN:MOON;
-    themeBtn.setAttribute("title",t==="dark"?"Cambiar a modo claro":"Cambiar a modo oscuro");
-  }
+  function applyTheme(t){theme=t;document.documentElement.setAttribute("data-theme",t);themeIcon.innerHTML=(t==="dark")?SUN:MOON;themeBtn.setAttribute("title",t==="dark"?"Cambiar a modo claro":"Cambiar a modo oscuro");}
 
-  function micErrorMessage(name){
-    if(name==="NotAllowedError"||name==="SecurityError"){
-      if(inIframe){return "El micrófono está bloqueado porque la herramienta corre dentro de una vista previa restringida. Debe ejecutarse desde http://localhost o https; revisa las instrucciones del chat.";}
-      if(isFile){return "Estás abriendo el archivo como file://; el reconocimiento de voz de Chrome no funciona desde ahí. Sírvelo desde http://localhost (Live Server de VS Code, o python -m http.server) y volverá a funcionar.";}
-      return "No se pudo acceder al micrófono. Revisa que el navegador tenga permiso para el micrófono en este sitio y vuelve a intentar.";
-    }
-    if(name==="NotFoundError"||name==="DevicesNotFoundError"){return "No se detectó ningún micrófono conectado. Conecta uno y vuelve a intentar.";}
-    if(name==="NotReadableError"){return "El micrófono está siendo usado por otra aplicación. Ciérrala y vuelve a intentar.";}
-    return "No se pudo iniciar la captura de audio."+(name?" ("+name+")":"");
-  }
-
-  function buildText(){
-    if(segments.length===0) return "";
-    if(showTimestamps){return segments.map(function(s){return "["+fmtTime(s.t)+"] "+s.text;}).join("\n");}
-    return segments.map(function(s){return s.text;}).join(" ");
-  }
+  function buildText(){if(segments.length===0)return "";if(showTimestamps){return segments.map(function(s){return "["+fmtTime(s.t)+"] "+s.text;}).join("\n");}return segments.map(function(s){return s.text;}).join(" ");}
   function renderTranscript(){
     if(segments.length===0 && !interim){transcriptEl.innerHTML='<span class="placeholder">El texto transcrito aparecerá aquí...</span>';return;}
     var html="";
-    for(var i=0;i<segments.length;i++){
-      if(showTimestamps){html+='<span class="ts">['+fmtTime(segments[i].t)+']</span> ';}
-      html+=escapeHtml(segments[i].text)+" ";
-      if(showTimestamps){html+="<br>";}
-    }
+    for(var i=0;i<segments.length;i++){if(showTimestamps){html+='<span class="ts">['+fmtTime(segments[i].t)+']</span> ';}html+=escapeHtml(segments[i].text)+" ";if(showTimestamps){html+="<br>";}}
     if(interim){html+='<span class="interim">'+escapeHtml(interim)+'</span>';}
-    transcriptEl.innerHTML=html;
-    transcriptEl.scrollTop=transcriptEl.scrollHeight;
+    transcriptEl.innerHTML=html;transcriptEl.scrollTop=transcriptEl.scrollHeight;
   }
-  function renderStats(){
-    var ms=accumMs; if(runningSince!=null) ms+=Date.now()-runningSince;
-    durationEl.textContent=fmtTime(ms/1000);
-    var words=0;
-    for(var i=0;i<segments.length;i++){var t=segments[i].text.trim(); if(t) words+=t.split(/\s+/).length;}
-    wordsEl.textContent=words;
+  function renderStats(){var ms=accumMs;if(runningSince!=null)ms+=Date.now()-runningSince;durationEl.textContent=fmtTime(ms/1000);var w=0;for(var i=0;i<segments.length;i++){var t=segments[i].text.trim();if(t)w+=t.split(/\s+/).length;}wordsEl.textContent=w;}
+  function updateActions(){var has=segments.length>0;copyBtn.disabled=!has;downloadBtn.disabled=!has;clearBtn.disabled=!has;clearLabel.textContent=(confirmClear&&has)?"Confirmar":"Limpiar";}
+
+  function renderMicButtons(){
+    primaryBtn.className="btn-primary";primaryBtn.disabled=false;
+    if(statusState==="recording"){primaryBtn.classList.add("pausing");primaryIcon.innerHTML=PAUSE;primaryLabel.textContent="Pausar";stopBtn.style.display="";}
+    else if(statusState==="paused"){primaryBtn.classList.add("resuming");primaryIcon.innerHTML=PLAY;primaryLabel.textContent="Reanudar";stopBtn.style.display="";}
+    else{primaryIcon.innerHTML=MIC;primaryLabel.textContent=segments.length?"Continuar grabación":"Iniciar grabación";stopBtn.style.display="none";}
   }
-  function renderStatus(){
-    dotEl.className="dot"; primaryBtn.className="btn-primary";
-    if(statusState==="recording"){
-      dotEl.classList.add("rec"); statusTxt.textContent="Grabando...";
-      primaryBtn.classList.add("pausing"); primaryIcon.innerHTML=PAUSE; primaryLabel.textContent="Pausar";
-      stopBtn.style.display="";
-    } else if(statusState==="paused"){
-      dotEl.classList.add("pause"); statusTxt.textContent="En pausa";
-      primaryBtn.classList.add("resuming"); primaryIcon.innerHTML=PLAY; primaryLabel.textContent="Reanudar";
-      stopBtn.style.display="";
-    } else {
-      statusTxt.textContent=segments.length?"Detenido":"Listo para iniciar";
-      primaryIcon.innerHTML=MIC; primaryLabel.textContent=segments.length?"Continuar grabación":"Iniciar grabación";
-      stopBtn.style.display="none";
-    }
-    var has=segments.length>0;
-    copyBtn.disabled=!has; downloadBtn.disabled=!has; clearBtn.disabled=!has;
-    clearLabel.textContent=(confirmClear&&has)?"Confirmar":"Limpiar";
+  function updateButtonsForMode(){
+    var busy=transcribing||capturing;
+    modeTabs.forEach(function(t){t.disabled=busy;});
+    langSelect.disabled=busy;qualitySelect.disabled=busy;
+    if(mode==="mic"){renderMicButtons();}
+    if(mode==="system"){sysBtn.disabled=transcribing;sysBtn.innerHTML=capturing?(STOPSQ+"Detener y transcribir"):(SPK+"Capturar audio del sistema");sysBtn.className=capturing?"btn-primary pausing":"btn-primary";}
+    if(mode==="file"){transcribeFileBtn.disabled=transcribing||!selectedFile;}
+    updateActions();
   }
 
+  /* ---------- MIC (Web Speech) ---------- */
   function begin(){
-    if(!recognition) return;
-    hideError();
-    recognition.lang=lang; shouldRun=true;
-    statusState="recording"; renderStatus();
-    runningSince=Date.now();
-    if(timerInterval) clearInterval(timerInterval);
-    timerInterval=setInterval(renderStats,250);
-    try {
-      recognition.start();
-    } catch(e) {
-      // InvalidStateError = ya estaba corriendo, se reconectará via onend
-      if(e.name !== "InvalidStateError"){
-        shouldRun=false; runningSince=null;
-        clearInterval(timerInterval); timerInterval=null;
-        statusState="idle"; renderStatus();
-        showError("No se pudo iniciar el reconocimiento de voz: "+(e.message||e.name));
-      }
-    }
+    if(!recognition)return;hideError();
+    recognition.lang=langSelect.value;shouldRun=true;statusState="recording";
+    setStatusUI("Grabando...","rec");renderMicButtons();
+    runningSince=Date.now();if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(renderStats,250);
+    try{recognition.start();}catch(e){if(e.name!=="InvalidStateError"){shouldRun=false;runningSince=null;clearInterval(timerInterval);timerInterval=null;statusState="idle";setStatusUI("Listo","");renderMicButtons();showError("No se pudo iniciar el reconocimiento de voz: "+(e.message||e.name));}}
   }
   function halt(newStatus){
-    shouldRun=false;
-    try{if(recognition) recognition.stop();}catch(e){}
+    shouldRun=false;try{if(recognition)recognition.stop();}catch(e){}
     if(runningSince!=null){accumMs+=Date.now()-runningSince;runningSince=null;}
     if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
-    interim=""; statusState=newStatus;
-    renderStatus(); renderStats(); renderTranscript();
+    interim="";statusState=newStatus;
+    setStatusUI(newStatus==="paused"?"En pausa":(segments.length?"Detenido":"Listo"),newStatus==="paused"?"pause":"");
+    renderMicButtons();renderStats();renderTranscript();
   }
-
-  if(!SR){
-    showError("Tu navegador no es compatible con el reconocimiento de voz. Abre esta herramienta en Google Chrome o Microsoft Edge de escritorio.");
-    primaryBtn.disabled=true; langSelect.disabled=true; tsToggle.disabled=true;
-  } else {
-    recognition=new SR();
-    recognition.continuous=true; recognition.interimResults=true; recognition.maxAlternatives=1; recognition.lang=lang;
+  if(SR){
+    recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;recognition.lang="es-MX";
     recognition.onresult=function(event){
-      var interimText="";
-      for(var i=event.resultIndex;i<event.results.length;i++){
-        var res=event.results[i], txt=res[0].transcript;
-        if(res.isFinal){
-          var cleaned=txt.trim();
-          if(cleaned){var ms=accumMs; if(runningSince!=null) ms+=Date.now()-runningSince; segments.push({text:cleaned,t:ms/1000});}
-        } else { interimText+=txt; }
-      }
-      interim=interimText; renderTranscript(); renderStats(); renderStatus();
+      var it="";
+      for(var i=event.resultIndex;i<event.results.length;i++){var res=event.results[i],txt=res[0].transcript;if(res.isFinal){var c=txt.trim();if(c){var ms=accumMs;if(runningSince!=null)ms+=Date.now()-runningSince;segments.push({text:c,t:ms/1000});}}else{it+=txt;}}
+      interim=it;renderTranscript();renderStats();updateActions();
     };
     recognition.onerror=function(event){
-      var err=event.error;
-      if(err==="no-speech"||err==="aborted") return;
-      if(err==="not-allowed"||err==="service-not-allowed"){showError(micErrorMessage("NotAllowedError")); halt("idle");}
-      else if(err==="audio-capture"){showError(micErrorMessage("NotFoundError")); halt("idle");}
-      else if(err==="network"){showError("Problema de conexión. El reconocimiento de voz necesita internet; se intentará reconectar automáticamente.");}
+      var err=event.error;if(err==="no-speech"||err==="aborted")return;
+      if(err==="not-allowed"||err==="service-not-allowed"){showError(inIframe?"El micrófono está bloqueado en esta vista previa. Abre la herramienta en tu sitio publicado.":(isFile?"Estás abriendo el archivo como file://. Sírvelo desde http://localhost o https.":"No se pudo acceder al micrófono. Revisa los permisos del navegador."));halt("idle");}
+      else if(err==="audio-capture"){showError("No se detectó ningún micrófono.");halt("idle");}
+      else if(err==="network"){showError("Problema de conexión. El modo micrófono usa el servicio de voz de Chrome y necesita internet estable.");}
     };
-    recognition.onend=function(){ if(shouldRun){ try{recognition.start();}catch(e){} } };
+    recognition.onend=function(){if(shouldRun){try{recognition.start();}catch(e){}}};
   }
 
-  primaryBtn.onclick=function(){ if(statusState==="recording"){halt("paused");} else {begin();} };
-  stopBtn.onclick=function(){ halt("idle"); };
-  langSelect.onchange=function(e){
-    lang=e.target.value;
-    if(recognition && statusState==="recording"){recognition.lang=lang; try{recognition.stop();}catch(err){}}
-  };
-  tsToggle.onchange=function(e){ showTimestamps=e.target.checked; renderTranscript(); };
-
-  copyBtn.onclick=function(){
-    var text=buildText(); if(!text) return;
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){showToast("Texto copiado");},function(){fallbackCopy(text);});
-    } else { fallbackCopy(text); }
-  };
-  function fallbackCopy(text){
-    var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
-    document.body.appendChild(ta); ta.select();
-    try{document.execCommand("copy"); showToast("Texto copiado");}catch(e){}
-    document.body.removeChild(ta);
+  /* ---------- WHISPER (modelo local) ---------- */
+  async function ensureModel(){
+    var wanted=qualitySelect.value;
+    if(transcriber && loadedModel===wanted)return transcriber;
+    transcriber=null;
+    setStatusUI("Cargando modelo...","proc");showProg("Cargando librería de transcripción...",null);
+    var mod=await import("https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2");
+    mod.env.allowLocalModels=false;
+    showProg("Descargando modelo de transcripción...",null);
+    transcriber=await mod.pipeline("automatic-speech-recognition",wanted,{progress_callback:function(d){if(d&&d.status==="progress"&&d.total){var pct=Math.round((d.loaded/d.total)*100);showProg("Descargando modelo: "+pct+"%",pct);}}});
+    loadedModel=wanted;return transcriber;
   }
-  downloadBtn.onclick=function(){
-    var text=buildText(); if(!text) return;
-    var blob=new Blob([text],{type:"text/plain;charset=utf-8"});
-    var url=URL.createObjectURL(blob); var a=document.createElement("a");
-    a.href=url; a.download="transcripcion-"+new Date().toISOString().slice(0,10)+".txt";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    showToast("Archivo descargado");
-  };
-  clearBtn.onclick=function(){
-    if(!confirmClear){confirmClear=true; renderStatus(); setTimeout(function(){confirmClear=false; renderStatus();},2600); return;}
-    confirmClear=false; halt("idle"); accumMs=0; segments=[]; interim="";
-    renderStats(); renderTranscript(); renderStatus();
+  async function decodeToMono16k(arrayBuffer){
+    var Ctx=window.AudioContext||window.webkitAudioContext;var ctx=new Ctx({sampleRate:16000});
+    var decoded=await ctx.decodeAudioData(arrayBuffer);
+    var ch=decoded.numberOfChannels,len=decoded.length,out=new Float32Array(len);
+    for(var c=0;c<ch;c++){var d=decoded.getChannelData(c);for(var i=0;i<len;i++){out[i]+=d[i]/ch;}}
+    try{ctx.close();}catch(e){}
+    return out;
+  }
+  async function runTranscription(float32){
+    if(!float32||!float32.length){showError("No se pudo leer el audio.");hideProg();setStatusUI("Listo","");updateButtonsForMode();return;}
+    cancelFlag=false;transcribing=true;updateButtonsForMode();
+    try{await ensureModel();}catch(e){transcribing=false;hideProg();setStatusUI("Listo","");updateButtonsForMode();showError("No se pudo cargar el modelo. Revisa tu conexión a internet. ("+(e.message||e)+")");return;}
+    var RATE=16000,sliceSec=30,sliceLen=RATE*sliceSec;
+    var total=Math.max(1,Math.ceil(float32.length/sliceLen));
+    setStatusUI("Transcribiendo...","proc");
+    for(var i=0;i<total;i++){
+      if(cancelFlag)break;
+      showProg("Transcribiendo bloque "+(i+1)+" de "+total+"...",Math.round((i/total)*100));
+      var slice=float32.subarray(i*sliceLen,Math.min((i+1)*sliceLen,float32.length));
+      try{var out=await transcriber(slice,{language:whisperLang(),task:"transcribe"});var text=(out&&out.text?out.text:"").trim();if(text){segments.push({text:text,t:i*sliceSec});renderTranscript();renderStats();updateActions();}}catch(e){}
+    }
+    showProg("Listo",100);setTimeout(hideProg,800);
+    transcribing=false;
+    setStatusUI(cancelFlag?"Transcripción cancelada":"Transcripción completa","");
+    cancelFlag=false;updateButtonsForMode();
+  }
+
+  /* ---------- SYSTEM AUDIO ---------- */
+  function systemSupported(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia&&window.MediaRecorder);}
+  async function startSystemCapture(){
+    hideError();
+    if(!systemSupported()){showError("La captura del audio del sistema solo funciona en computadora con Chrome o Edge.");return;}
+    var stream;
+    try{stream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});}catch(e){if(e&&e.name!=="NotAllowedError")showError("No se inició la captura. ("+(e.name||e)+")");return;}
+    var aud=stream.getAudioTracks();
+    if(!aud.length){stream.getTracks().forEach(function(t){t.stop();});showError('No se compartió audio. Vuelve a intentar y marca la casilla "Compartir audio".');return;}
+    stream.getVideoTracks().forEach(function(t){t.stop();});
+    sysStream=new MediaStream(aud);sysChunks=[];
+    var mime=(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported("audio/webm"))?"audio/webm":"";
+    try{sysRecorder=mime?new MediaRecorder(sysStream,{mimeType:mime}):new MediaRecorder(sysStream);}catch(e){sysRecorder=new MediaRecorder(sysStream);}
+    sysRecorder.ondataavailable=function(ev){if(ev.data&&ev.data.size>0)sysChunks.push(ev.data);};
+    sysRecorder.onstop=function(){finishSystemCapture();};
+    aud[0].onended=function(){if(capturing)stopSystemCapture();};
+    sysRecorder.start(1000);
+    capturing=true;accumMs=0;runningSince=Date.now();
+    if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(renderStats,250);
+    setStatusUI("Grabando audio del sistema...","rec");updateButtonsForMode();
+  }
+  function stopSystemCapture(){
+    if(sysRecorder&&sysRecorder.state!=="inactive"){try{sysRecorder.stop();}catch(e){}}
+    if(sysStream){sysStream.getTracks().forEach(function(t){t.stop();});}
+    capturing=false;
+    if(runningSince!=null){accumMs+=Date.now()-runningSince;runningSince=null;}
+    if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+    renderStats();setStatusUI("Procesando grabación...","proc");updateButtonsForMode();
+  }
+  async function finishSystemCapture(){
+    if(!sysChunks.length){setStatusUI("No se capturó audio","");updateButtonsForMode();return;}
+    try{showProg("Preparando audio...",null);var blob=new Blob(sysChunks,{type:sysChunks[0].type||"audio/webm"});var buf=await blob.arrayBuffer();var f=await decodeToMono16k(buf);await runTranscription(f);}
+    catch(e){showError("No se pudo procesar el audio capturado. ("+(e.message||e)+")");hideProg();setStatusUI("Listo","");updateButtonsForMode();}
+  }
+
+  /* ---------- FILE ---------- */
+  function handleFile(file){if(!file)return;selectedFile=file;fileName.textContent=file.name;updateButtonsForMode();}
+  fileInput.onchange=function(e){handleFile(e.target.files&&e.target.files[0]);};
+  dropZone.onclick=function(){fileInput.click();};
+  dropZone.ondragover=function(e){e.preventDefault();dropZone.classList.add("drag");};
+  dropZone.ondragleave=function(){dropZone.classList.remove("drag");};
+  dropZone.ondrop=function(e){e.preventDefault();dropZone.classList.remove("drag");handleFile(e.dataTransfer.files&&e.dataTransfer.files[0]);};
+  transcribeFileBtn.onclick=async function(){
+    if(!selectedFile||transcribing)return;hideError();setStatusUI("Leyendo archivo...","proc");
+    try{showProg("Preparando audio...",null);var buf=await selectedFile.arrayBuffer();var f=await decodeToMono16k(buf);await runTranscription(f);}
+    catch(e){showError("No se pudo leer el archivo. Asegúrate de que sea un audio válido. ("+(e.message||e)+")");hideProg();setStatusUI("Listo","");updateButtonsForMode();}
   };
 
-  themeBtn.onclick=function(){ applyTheme(theme==="dark"?"light":"dark"); };
-  infoClose.onclick=function(){ infobar.classList.remove("show"); };
+  /* ---------- MODE SWITCH ---------- */
+  function setMode(m){
+    if(transcribing||capturing)return;
+    if(mode==="mic"&&statusState!=="idle")halt("idle");
+    mode=m;
+    modeTabs.forEach(function(t){t.classList.toggle("active",t.getAttribute("data-mode")===m);});
+    modeDesc.textContent=m==="mic"?"Transcribe en vivo lo que capta el micrófono. Funciona en teléfono y computadora.":m==="system"?"Captura el audio que suena en tu computadora (una pestaña, un video, una llamada). Solo en escritorio.":"Sube un archivo de audio y transcríbelo. El texto aparece al terminar.";
+    ctrlMic.style.display=m==="mic"?"":"none";
+    ctrlSystem.style.display=m==="system"?"":"none";
+    ctrlFile.style.display=m==="file"?"":"none";
+    qualityField.style.display=m==="mic"?"none":"";
+    accumMs=0;runningSince=null;hideProg();hideError();renderStats();
+    if(m==="mic"&&!SR){showError("Tu navegador no es compatible con el reconocimiento de voz en vivo. Usa Chrome o Edge, o prueba los modos de sistema y archivo.");}
+    if(m==="system"&&!systemSupported()){showError("La captura del audio del sistema solo funciona en computadora con Chrome o Edge, no en teléfono.");}
+    setStatusUI("Listo","");updateButtonsForMode();
+  }
 
+  /* ---------- SHARED ACTIONS ---------- */
+  primaryBtn.onclick=function(){if(statusState==="recording"){halt("paused");}else{begin();}};
+  stopBtn.onclick=function(){halt("idle");};
+  sysBtn.onclick=function(){if(capturing){stopSystemCapture();}else{startSystemCapture();}};
+  cancelBtn.onclick=function(){cancelFlag=true;};
+  modeTabs.forEach(function(t){t.onclick=function(){setMode(t.getAttribute("data-mode"));};});
+  langSelect.onchange=function(){if(recognition&&mode==="mic"&&statusState==="recording"){recognition.lang=langSelect.value;try{recognition.stop();}catch(e){}}};
+  qualitySelect.onchange=function(){if(loadedModel!==qualitySelect.value){transcriber=null;loadedModel=null;}};
+  tsToggle.onchange=function(e){showTimestamps=e.target.checked;renderTranscript();};
+
+  copyBtn.onclick=function(){var text=buildText();if(!text)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){showToast("Texto copiado");},function(){fallbackCopy(text);});}else{fallbackCopy(text);}};
+  function fallbackCopy(text){var ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");showToast("Texto copiado");}catch(e){}document.body.removeChild(ta);}
+  downloadBtn.onclick=function(){var text=buildText();if(!text)return;var blob=new Blob([text],{type:"text/plain;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="transcripcion-"+new Date().toISOString().slice(0,10)+".txt";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast("Archivo descargado");};
+  clearBtn.onclick=function(){if(!confirmClear){confirmClear=true;updateActions();setTimeout(function(){confirmClear=false;updateActions();},2600);return;}confirmClear=false;cancelFlag=true;if(mode==="mic"&&statusState!=="idle")halt("idle");segments=[];interim="";accumMs=0;runningSince=null;renderStats();renderTranscript();updateButtonsForMode();};
+
+  themeBtn.onclick=function(){applyTheme(theme==="dark"?"light":"dark");};
+  infoClose.onclick=function(){infobar.classList.remove("show");};
+
+  /* ---------- INIT ---------- */
   applyTheme("dark");
-  if(inIframe){
-    infoText.textContent="El micrófono no funciona dentro de esta vista previa. La herramienta debe ejecutarse desde una dirección http://localhost o https. Revisa las instrucciones del chat para abrirla con un servidor local.";
-    infobar.classList.add("show");
-  } else if(isFile){
-    infoText.textContent="Abriste el archivo como file://, que para Chrome es un origen sin dirección web válida, y el reconocimiento de voz no funciona ahí. Sírvelo desde http://localhost (por ejemplo con la extensión Live Server de VS Code, o con python -m http.server) y el micrófono funcionará.";
-    infobar.classList.add("show");
-  }
-  renderStatus(); renderStats(); renderTranscript();
+  noteEl.innerHTML='<b>Nota:</b> el modo micrófono es instantáneo y necesita internet. Los modos de sistema y archivo descargan un modelo la primera vez y procesan dentro de tu dispositivo, sin enviar el audio a ningún servidor.';
+  if(inIframe){infoText.textContent="Esta es una vista previa donde el micrófono y la captura no funcionan. Prueba la herramienta en tu sitio publicado (https).";infobar.classList.add("show");}
+  else if(isFile){infoText.textContent="Abriste el archivo como file://. El modo micrófono no funciona ahí; sírvelo desde http://localhost o https (por ejemplo tu sitio de GitHub Pages).";infobar.classList.add("show");}
+  setMode("mic");
+  renderTranscript();renderStats();
 </script>
 </body>
 </html>
