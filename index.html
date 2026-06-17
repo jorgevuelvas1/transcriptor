@@ -260,7 +260,7 @@
             <button id="summarizeBtn" class="btn-ai2" disabled></button>
             <button id="viewToggle" class="btn-ghost" style="display:none">Ver original</button>
           </div>
-          <div class="hint">Mejorar agrega puntuación, acentos y párrafos. Resumir genera los puntos clave. Ambos usan tu clave de Gemini.</div>
+          <div class="hint">Opcional. La transcripción funciona sin ninguna clave; estos botones solo pulen o resumen el texto y usan tu clave de Gemini.</div>
           <div id="keyPanel" class="key-panel">
             <input id="keyInput" type="password" placeholder="Pega tu clave de Google AI Studio (Gemini)">
             <div class="ai-row">
@@ -288,6 +288,7 @@
   var segments=[], interim="", showTimestamps=false;
   var accumMs=0, runningSince=null, timerInterval=null, confirmClear=false;
   var theme="dark", mode="mic";
+  var micFinal="", micSession="", isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   var transcriber=null, loadedModel=null, transcribing=false, cancelFlag=false;
   var capturing=false, sysRecorder=null, sysStream=null, sysChunks=[];
   var selectedFile=null;
@@ -392,8 +393,14 @@
   }
 
   /* ---------- MIC ---------- */
+  function micRender(){
+    var full=(micFinal+((micFinal&&micSession)?" ":"")+micSession).trim();
+    segments=full?[{text:full,t:0}]:[];
+    renderTranscript();renderStats();updateActions();updateImproveUI();
+  }
   function begin(){
     if(!recognition)return;hideError();resetAI();
+    micFinal=segments.length?segments.map(function(s){return s.text;}).join(" ").trim():"";micSession="";interim="";
     recognition.lang=langSelect.value;shouldRun=true;statusState="recording";
     setStatusUI("Grabando...","rec");renderMicButtons();
     runningSince=Date.now();if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(renderStats,250);
@@ -401,18 +408,19 @@
   }
   function halt(newStatus){
     shouldRun=false;try{if(recognition)recognition.stop();}catch(e){}
+    micFinal=(micFinal+((micFinal&&micSession)?" ":"")+micSession).trim();micSession="";
     if(runningSince!=null){accumMs+=Date.now()-runningSince;runningSince=null;}
     if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
-    interim="";statusState=newStatus;
+    interim="";statusState=newStatus;micRender();
     setStatusUI(newStatus==="paused"?"En pausa":(segments.length?"Detenido":"Listo"),newStatus==="paused"?"pause":"");
-    renderMicButtons();renderStats();renderTranscript();updateImproveUI();
+    renderMicButtons();
   }
   if(SR){
-    recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;recognition.lang="es-MX";
+    recognition=new SR();recognition.continuous=!isMobile;recognition.interimResults=true;recognition.maxAlternatives=1;recognition.lang="es-MX";
     recognition.onresult=function(event){
-      var it="";
-      for(var i=event.resultIndex;i<event.results.length;i++){var res=event.results[i],txt=res[0].transcript;if(res.isFinal){var c=txt.trim();if(c){var ms=accumMs;if(runningSince!=null)ms+=Date.now()-runningSince;segments.push({text:c,t:ms/1000});}}else{it+=txt;}}
-      interim=it;renderTranscript();renderStats();updateActions();updateImproveUI();
+      var sf="",it="";
+      for(var i=0;i<event.results.length;i++){var r=event.results[i];if(r.isFinal){sf+=r[0].transcript+" ";}else{it+=r[0].transcript;}}
+      micSession=sf.trim();interim=it;micRender();
     };
     recognition.onerror=function(event){
       var err=event.error;if(err==="no-speech"||err==="aborted")return;
@@ -420,7 +428,10 @@
       else if(err==="audio-capture"){showError("No se detectó ningún micrófono.");halt("idle");}
       else if(err==="network"){showError("Problema de conexión. El modo micrófono usa el servicio de voz de Chrome y necesita internet estable.");}
     };
-    recognition.onend=function(){if(shouldRun){try{recognition.start();}catch(e){}}};
+    recognition.onend=function(){
+      micFinal=(micFinal+((micFinal&&micSession)?" ":"")+micSession).trim();micSession="";interim="";
+      if(shouldRun){try{recognition.start();}catch(e){}}else{micRender();}
+    };
   }
 
   /* ---------- WHISPER ---------- */
