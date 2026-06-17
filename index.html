@@ -48,7 +48,7 @@
   .bclose:hover{opacity:1;}
 
   .modes{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px;margin-bottom:12px;}
-  .mode-tab{flex:1;padding:10px 6px;border-radius:8px;background:transparent;color:var(--muted);font-weight:600;font-size:13.5px;border:none;cursor:pointer;transition:.15s ease;}
+  .mode-tab{flex:1;padding:10px 4px;border-radius:8px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;border:none;cursor:pointer;transition:.15s ease;}
   .mode-tab.active{background:var(--tabactive);color:var(--ink);box-shadow:0 1px 5px rgba(0,0,0,.15);}
   .mode-tab:disabled{opacity:.5;cursor:not-allowed;}
   .mode-desc{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 2px 18px;}
@@ -103,6 +103,8 @@
   .btn-ghost.danger:hover{border-color:var(--red);background:var(--err-bg);}
   .btn-ai{padding:13px 22px;color:#fff;background:linear-gradient(120deg,var(--primary),var(--secondary));}
   .btn-ai:hover{filter:brightness(1.08);}
+  .btn-ai2{padding:13px 22px;color:#fff;background:var(--secondary);}
+  .btn-ai2:hover{background:var(--secondary-strong);}
   button:disabled{opacity:.4;cursor:not-allowed;}
   .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
 
@@ -120,11 +122,18 @@
   .transcript .interim{color:var(--muted);font-style:italic;}
   .transcript p{margin:0 0 11px;}
 
-  .ai-area{margin-top:14px;margin-bottom:4px;}
+  .ai-area{margin-top:14px;}
   .ai-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .key-panel{display:none;flex-direction:column;gap:9px;margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;}
   .key-panel a{color:var(--primary);text-decoration:none;}
   .key-panel a:hover{text-decoration:underline;}
+  .summary-box{display:none;margin-top:16px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--secondary);border-radius:12px;padding:16px 18px;}
+  .summary-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .summary-head b{font-size:14px;color:var(--ink);}
+  .summary-text{font-size:14.5px;line-height:1.6;color:var(--ink);}
+  .summary-text p{margin:0 0 9px;}
+  .mini{background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:600;border-radius:8px;padding:5px 10px;cursor:pointer;}
+  .mini:hover{border-color:var(--primary);color:var(--ink);}
 
   .note{margin-top:18px;font-size:12.5px;color:var(--muted);line-height:1.6;}
   .note b{color:var(--ink);}
@@ -139,14 +148,14 @@
     .head h1{font-size:16.5px;}
     .head p{font-size:12px;}
     .body{padding:18px 16px;}
-    .mode-tab{font-size:12.5px;padding:9px 4px;}
+    .mode-tab{font-size:11.5px;padding:9px 3px;}
     .toolbar{flex-direction:column;align-items:stretch;gap:14px;}
     .left-fields{flex-direction:column;}
     select{min-width:0;width:100%;}
     .stage{flex-direction:column;align-items:stretch;gap:12px;}
     .stats{margin-left:0;flex-wrap:wrap;}
     .actions{flex-direction:column;align-items:stretch;gap:10px;}
-    .btn-primary,.btn-stop,.btn-ai{width:100%;justify-content:center;}
+    .btn-primary,.btn-stop,.btn-ai,.btn-ai2{width:100%;justify-content:center;}
     .ai-row{flex-direction:column;align-items:stretch;}
     .tools{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
     .tools button{justify-content:center;padding:12px 6px;font-size:12.5px;}
@@ -169,8 +178,9 @@
 
         <div class="modes">
           <button class="mode-tab active" data-mode="mic">Micrófono</button>
-          <button class="mode-tab" data-mode="system">Audio del sistema</button>
-          <button class="mode-tab" data-mode="file">Subir archivo</button>
+          <button class="mode-tab" data-mode="system">Sistema</button>
+          <button class="mode-tab" data-mode="file">Archivo</button>
+          <button class="mode-tab" data-mode="youtube">YouTube</button>
         </div>
         <p id="modeDesc" class="mode-desc"></p>
 
@@ -230,6 +240,12 @@
           <button id="transcribeFileBtn" class="btn-primary" disabled style="margin-top:12px;width:100%;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Transcribir archivo</button>
         </div>
 
+        <div id="ctrlYouTube" style="display:none;margin-bottom:14px">
+          <input id="ytInput" type="text" placeholder="https://www.youtube.com/watch?v=...">
+          <button id="ytBtn" class="btn-primary" style="margin-top:12px;width:100%;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>Transcribir video</button>
+          <p class="hint">Funciona con videos <b>públicos</b> que tengan subtítulos o audio claro. Los videos muy largos pueden exceder el plan gratuito. Usa tu clave de Gemini.</p>
+        </div>
+
         <div class="tools">
           <button id="copy" class="btn-ghost" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar</button>
           <button id="download" class="btn-ghost" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar .txt</button>
@@ -241,9 +257,10 @@
         <div class="ai-area">
           <div class="ai-row">
             <button id="improveBtn" class="btn-ai" disabled></button>
+            <button id="summarizeBtn" class="btn-ai2" disabled></button>
             <button id="viewToggle" class="btn-ghost" style="display:none">Ver original</button>
           </div>
-          <div class="hint">Agrega puntuación, acentos, mayúsculas y separación en párrafos con inteligencia artificial.</div>
+          <div class="hint">Mejorar agrega puntuación, acentos y párrafos. Resumir genera los puntos clave. Ambos usan tu clave de Gemini.</div>
           <div id="keyPanel" class="key-panel">
             <input id="keyInput" type="password" placeholder="Pega tu clave de Google AI Studio (Gemini)">
             <div class="ai-row">
@@ -251,6 +268,10 @@
               <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Obtener clave gratis</a>
             </div>
             <div class="hint">La clave se queda solo en esta sesión, no se guarda ni se comparte.</div>
+          </div>
+          <div id="summaryBox" class="summary-box">
+            <div class="summary-head"><b>Resumen con IA</b><button id="summaryCopy" class="mini" style="margin-left:auto">Copiar</button><button id="summaryClose" class="mini">Cerrar</button></div>
+            <div id="summaryTextEl" class="summary-text"></div>
           </div>
         </div>
 
@@ -271,8 +292,10 @@
   var capturing=false, sysRecorder=null, sysStream=null, sysChunks=[];
   var selectedFile=null;
   var geminiKey="", improvedText=null, viewOriginal=false, improving=false;
+  var summaryText=null, summarizing=false;
   var inIframe=false; try{ inIframe=(window.self!==window.top); }catch(e){ inIframe=true; }
   var isFile=(location.protocol==="file:");
+  var GEMINI_MODEL="gemini-2.0-flash";
 
   var $=function(id){return document.getElementById(id);};
   var dotEl=$("dot"),statusTxt=$("statusTxt"),durationEl=$("duration"),wordsEl=$("words");
@@ -284,10 +307,12 @@
   var themeBtn=$("themeBtn"),themeIcon=$("themeIcon");
   var modeTabs=Array.prototype.slice.call(document.querySelectorAll(".mode-tab"));
   var modeDesc=$("modeDesc"),noteEl=$("note");
-  var ctrlMic=$("ctrlMic"),ctrlSystem=$("ctrlSystem"),ctrlFile=$("ctrlFile");
+  var ctrlMic=$("ctrlMic"),ctrlSystem=$("ctrlSystem"),ctrlFile=$("ctrlFile"),ctrlYouTube=$("ctrlYouTube");
   var sysBtn=$("sysBtn"),dropZone=$("dropZone"),fileInput=$("fileInput"),fileName=$("fileName"),transcribeFileBtn=$("transcribeFileBtn");
+  var ytInput=$("ytInput"),ytBtn=$("ytBtn");
   var prog=$("prog"),progText=$("progText"),progBar=$("progBar"),progBarWrap=$("progBarWrap"),cancelBtn=$("cancelBtn");
-  var improveBtn=$("improveBtn"),viewToggle=$("viewToggle"),keyPanel=$("keyPanel"),keyInput=$("keyInput"),keySave=$("keySave");
+  var improveBtn=$("improveBtn"),summarizeBtn=$("summarizeBtn"),viewToggle=$("viewToggle"),keyPanel=$("keyPanel"),keyInput=$("keyInput"),keySave=$("keySave");
+  var summaryBox=$("summaryBox"),summaryTextEl=$("summaryTextEl"),summaryCopy=$("summaryCopy"),summaryClose=$("summaryClose");
 
   var MIC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>';
   var SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>';
@@ -295,6 +320,8 @@
   var PAUSE='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
   var PLAY='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M7 5l12 7-12 7z"/></svg>';
   var SPARK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>';
+  var DOC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><line x1="4" y1="6" x2="4.01" y2="6"/><line x1="4" y1="12" x2="4.01" y2="12"/><line x1="4" y1="18" x2="4.01" y2="18"/></svg>';
+  var YT='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>';
   var SUN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>';
   var MOON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
 
@@ -304,7 +331,7 @@
   function hideError(){banner.classList.remove("show");}
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");setTimeout(function(){toast.classList.remove("show");},1800);}
   function setStatusUI(text,cls){statusTxt.textContent=text;dotEl.className="dot"+(cls?(" "+cls):"");}
-  function showProg(text,pct){prog.style.display="block";progText.textContent=text;if(pct==null){progBarWrap.classList.add("indet");progBar.style.width="35%";}else{progBarWrap.classList.remove("indet");progBar.style.width=pct+"%";}}
+  function showProg(text,pct,cancelable){prog.style.display="block";progText.textContent=text;cancelBtn.style.display=cancelable?"":"none";if(pct==null){progBarWrap.classList.add("indet");progBar.style.width="35%";}else{progBarWrap.classList.remove("indet");progBar.style.width=pct+"%";}}
   function hideProg(){prog.style.display="none";progBarWrap.classList.remove("indet");}
   function whisperLang(){return langSelect.value.slice(0,2)==="en"?"english":"spanish";}
 
@@ -325,19 +352,27 @@
     }
     if(segments.length===0 && !interim){transcriptEl.innerHTML='<span class="placeholder">El texto transcrito aparecerá aquí...</span>';return;}
     var html="";
-    for(var i=0;i<segments.length;i++){if(showTimestamps){html+='<span class="ts">['+fmtTime(segments[i].t)+']</span> ';}html+=escapeHtml(segments[i].text)+" ";if(showTimestamps){html+="<br>";}}
+    for(var i=0;i<segments.length;i++){if(showTimestamps){html+='<span class="ts">['+fmtTime(segments[i].t)+']</span> ';}html+=escapeHtml(segments[i].text).replace(/\n{2,}/g,"<br><br>").replace(/\n/g,"<br>")+" ";if(showTimestamps){html+="<br>";}}
     if(interim){html+='<span class="interim">'+escapeHtml(interim)+'</span>';}
     transcriptEl.innerHTML=html;transcriptEl.scrollTop=transcriptEl.scrollHeight;
+  }
+  function renderSummary(){
+    if(!summaryText){summaryBox.style.display="none";return;}
+    var paras=summaryText.split(/\n{2,}|\n/).filter(function(p){return p.trim();});
+    summaryTextEl.innerHTML=paras.map(function(p){return "<p>"+escapeHtml(p)+"</p>";}).join("");
+    summaryBox.style.display="block";
   }
   function renderStats(){var ms=accumMs;if(runningSince!=null)ms+=Date.now()-runningSince;durationEl.textContent=fmtTime(ms/1000);var w=0;for(var i=0;i<segments.length;i++){var t=segments[i].text.trim();if(t)w+=t.split(/\s+/).length;}wordsEl.textContent=w;}
   function updateActions(){var has=segments.length>0||!!improvedText;copyBtn.disabled=!has;downloadBtn.disabled=!has;clearBtn.disabled=!has;clearLabel.textContent=(confirmClear&&has)?"Confirmar":"Limpiar";}
   function updateImproveUI(){
-    improveBtn.disabled=improving||transcribing||capturing||segments.length===0;
+    var has=segments.length>0;var busy=improving||summarizing||transcribing||capturing;
+    improveBtn.disabled=busy||!has;summarizeBtn.disabled=busy||!has;
     improveBtn.innerHTML=SPARK+(improving?"Mejorando...":(improvedText?"Volver a mejorar":"Mejorar con IA"));
+    summarizeBtn.innerHTML=DOC+(summarizing?"Resumiendo...":"Resumir con IA");
     viewToggle.style.display=improvedText?"":"none";
     viewToggle.textContent=viewOriginal?"Ver versión IA":"Ver original";
   }
-  function resetImproved(){improvedText=null;viewOriginal=false;updateImproveUI();}
+  function resetAI(){improvedText=null;viewOriginal=false;summaryText=null;renderSummary();updateImproveUI();}
 
   function renderMicButtons(){
     primaryBtn.className="btn-primary";primaryBtn.disabled=false;
@@ -346,18 +381,19 @@
     else{primaryIcon.innerHTML=MIC;primaryLabel.textContent=segments.length?"Continuar grabación":"Iniciar grabación";stopBtn.style.display="none";}
   }
   function updateButtonsForMode(){
-    var busy=transcribing||capturing||improving;
+    var busy=transcribing||capturing||improving||summarizing;
     modeTabs.forEach(function(t){t.disabled=busy;});
     langSelect.disabled=busy;qualitySelect.disabled=busy;
     if(mode==="mic"){renderMicButtons();}
-    if(mode==="system"){sysBtn.disabled=transcribing||improving;sysBtn.innerHTML=capturing?(STOPSQ+"Detener y transcribir"):(SPK+"Capturar audio del sistema");sysBtn.className=capturing?"btn-primary pausing":"btn-primary";}
-    if(mode==="file"){transcribeFileBtn.disabled=transcribing||improving||!selectedFile;}
+    if(mode==="system"){sysBtn.disabled=busy;sysBtn.innerHTML=capturing?(STOPSQ+"Detener y transcribir"):(SPK+"Capturar audio del sistema");sysBtn.className=capturing?"btn-primary pausing":"btn-primary";}
+    if(mode==="file"){transcribeFileBtn.disabled=busy||!selectedFile;}
+    if(mode==="youtube"){ytBtn.disabled=busy;ytBtn.innerHTML=(transcribing?YT+"Transcribiendo...":YT+"Transcribir video");}
     updateActions();updateImproveUI();
   }
 
   /* ---------- MIC ---------- */
   function begin(){
-    if(!recognition)return;hideError();resetImproved();
+    if(!recognition)return;hideError();resetAI();
     recognition.lang=langSelect.value;shouldRun=true;statusState="recording";
     setStatusUI("Grabando...","rec");renderMicButtons();
     runningSince=Date.now();if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(renderStats,250);
@@ -392,11 +428,11 @@
     var wanted=qualitySelect.value;
     if(transcriber && loadedModel===wanted)return transcriber;
     transcriber=null;
-    setStatusUI("Cargando modelo...","proc");showProg("Cargando librería de transcripción...",null);
+    setStatusUI("Cargando modelo...","proc");showProg("Cargando librería de transcripción...",null,false);
     var mod=await import("https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2");
     mod.env.allowLocalModels=false;
-    showProg("Descargando modelo de transcripción...",null);
-    transcriber=await mod.pipeline("automatic-speech-recognition",wanted,{progress_callback:function(d){if(d&&d.status==="progress"&&d.total){var pct=Math.round((d.loaded/d.total)*100);showProg("Descargando modelo: "+pct+"%",pct);}}});
+    showProg("Descargando modelo de transcripción...",null,false);
+    transcriber=await mod.pipeline("automatic-speech-recognition",wanted,{progress_callback:function(d){if(d&&d.status==="progress"&&d.total){var pct=Math.round((d.loaded/d.total)*100);showProg("Descargando modelo: "+pct+"%",pct,false);}}});
     loadedModel=wanted;return transcriber;
   }
   async function decodeToMono16k(arrayBuffer){
@@ -409,18 +445,18 @@
   }
   async function runTranscription(float32){
     if(!float32||!float32.length){showError("No se pudo leer el audio.");hideProg();setStatusUI("Listo","");updateButtonsForMode();return;}
-    resetImproved();cancelFlag=false;transcribing=true;updateButtonsForMode();
+    resetAI();cancelFlag=false;transcribing=true;updateButtonsForMode();
     try{await ensureModel();}catch(e){transcribing=false;hideProg();setStatusUI("Listo","");updateButtonsForMode();showError("No se pudo cargar el modelo. Revisa tu conexión a internet. ("+(e.message||e)+")");return;}
     var RATE=16000,sliceSec=30,sliceLen=RATE*sliceSec;
     var total=Math.max(1,Math.ceil(float32.length/sliceLen));
     setStatusUI("Transcribiendo...","proc");
     for(var i=0;i<total;i++){
       if(cancelFlag)break;
-      showProg("Transcribiendo bloque "+(i+1)+" de "+total+"...",Math.round((i/total)*100));
+      showProg("Transcribiendo bloque "+(i+1)+" de "+total+"...",Math.round((i/total)*100),true);
       var slice=float32.subarray(i*sliceLen,Math.min((i+1)*sliceLen,float32.length));
       try{var out=await transcriber(slice,{language:whisperLang(),task:"transcribe"});var text=(out&&out.text?out.text:"").trim();if(text){segments.push({text:text,t:i*sliceSec});renderTranscript();renderStats();updateActions();updateImproveUI();}}catch(e){}
     }
-    showProg("Listo",100);setTimeout(hideProg,800);
+    showProg("Listo",100,false);setTimeout(hideProg,800);
     transcribing=false;
     setStatusUI(cancelFlag?"Transcripción cancelada":"Transcripción completa","");
     cancelFlag=false;updateButtonsForMode();
@@ -435,7 +471,7 @@
     try{stream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});}catch(e){if(e&&e.name!=="NotAllowedError")showError("No se inició la captura. ("+(e.name||e)+")");return;}
     var aud=stream.getAudioTracks();
     if(!aud.length){stream.getTracks().forEach(function(t){t.stop();});showError('No se compartió audio. Vuelve a intentar y marca la casilla "Compartir audio".');return;}
-    resetImproved();
+    resetAI();
     stream.getVideoTracks().forEach(function(t){t.stop();});
     sysStream=new MediaStream(aud);sysChunks=[];
     var mime=(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported("audio/webm"))?"audio/webm":"";
@@ -458,7 +494,7 @@
   }
   async function finishSystemCapture(){
     if(!sysChunks.length){setStatusUI("No se capturó audio","");updateButtonsForMode();return;}
-    try{showProg("Preparando audio...",null);var blob=new Blob(sysChunks,{type:sysChunks[0].type||"audio/webm"});var buf=await blob.arrayBuffer();var f=await decodeToMono16k(buf);await runTranscription(f);}
+    try{showProg("Preparando audio...",null,false);var blob=new Blob(sysChunks,{type:sysChunks[0].type||"audio/webm"});var buf=await blob.arrayBuffer();var f=await decodeToMono16k(buf);await runTranscription(f);}
     catch(e){showError("No se pudo procesar el audio capturado. ("+(e.message||e)+")");hideProg();setStatusUI("Listo","");updateButtonsForMode();}
   }
 
@@ -471,54 +507,81 @@
   dropZone.ondrop=function(e){e.preventDefault();dropZone.classList.remove("drag");handleFile(e.dataTransfer.files&&e.dataTransfer.files[0]);};
   transcribeFileBtn.onclick=async function(){
     if(!selectedFile||transcribing)return;hideError();setStatusUI("Leyendo archivo...","proc");
-    try{showProg("Preparando audio...",null);var buf=await selectedFile.arrayBuffer();var f=await decodeToMono16k(buf);await runTranscription(f);}
+    try{showProg("Preparando audio...",null,false);var buf=await selectedFile.arrayBuffer();var f=await decodeToMono16k(buf);await runTranscription(f);}
     catch(e){showError("No se pudo leer el archivo. Asegúrate de que sea un audio válido. ("+(e.message||e)+")");hideProg();setStatusUI("Listo","");updateButtonsForMode();}
   };
 
-  /* ---------- AI: MEJORAR PUNTUACIÓN (Gemini) ---------- */
-  async function callGemini(text){
-    var MODEL="gemini-2.0-flash";
-    var prompt="Eres un corrector de transcripciones en español. Corrige la puntuación, las mayúsculas, los acentos y la separación en párrafos del siguiente texto. No cambies las palabras, no agregues ni quites contenido, no resumas ni opines. Devuelve únicamente el texto corregido, sin comillas ni comentarios.\n\nTexto:\n"+text;
-    var res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent?key="+encodeURIComponent(geminiKey),{
+  /* ---------- GEMINI ---------- */
+  async function geminiGenerate(parts){
+    var res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+GEMINI_MODEL+":generateContent?key="+encodeURIComponent(geminiKey),{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2}})
+      body:JSON.stringify({contents:[{parts:parts}],generationConfig:{temperature:0.2}})
     });
-    if(!res.ok){var t="";try{t=await res.text();}catch(e){}throw new Error("("+res.status+") "+t.slice(0,160));}
+    if(!res.ok){var t="";try{t=await res.text();}catch(e){}throw new Error("("+res.status+") "+t.slice(0,180));}
     var data=await res.json();
-    var parts=(((data.candidates||[])[0]||{}).content||{}).parts;
-    if(!parts||!parts[0]||!parts[0].text) throw new Error("La IA no devolvió texto. Revisa que la clave sea válida.");
-    return parts[0].text;
+    var p=(((data.candidates||[])[0]||{}).content||{}).parts;
+    if(!p||!p[0]||!p[0].text) throw new Error("La IA no devolvió texto. Revisa la clave o que el contenido sea válido.");
+    return p[0].text;
   }
   async function improveWithAI(){
-    if(improving)return;
+    if(improving||summarizing)return;
     var raw=rawText();
     if(!raw){showError("No hay texto que mejorar todavía.");return;}
     if(!geminiKey){keyPanel.style.display="flex";keyInput.focus();return;}
-    improving=true;hideError();setStatusUI("Mejorando con IA...","proc");showProg("Mejorando con IA...",null);updateButtonsForMode();
+    improving=true;hideError();setStatusUI("Mejorando con IA...","proc");showProg("Mejorando con IA...",null,false);updateButtonsForMode();
     try{
-      var improved=await callGemini(raw);
-      improvedText=improved.trim();viewOriginal=false;
-      renderTranscript();showToast("Texto mejorado con IA");setStatusUI("Texto mejorado con IA","");
-    }catch(e){
-      showError("No se pudo mejorar el texto. "+(e.message||e));setStatusUI("Listo","");
-      if(String(e).indexOf("400")>=0||String(e).indexOf("403")>=0){keyPanel.style.display="flex";}
-    }
+      var prompt="Eres un corrector de transcripciones en español. Corrige la puntuación, las mayúsculas, los acentos y la separación en párrafos del siguiente texto. No cambies las palabras, no agregues ni quites contenido, no resumas ni opines. Devuelve únicamente el texto corregido, sin comillas ni comentarios.\n\nTexto:\n"+raw;
+      var improved=await geminiGenerate([{text:prompt}]);
+      improvedText=improved.trim();viewOriginal=false;renderTranscript();showToast("Texto mejorado con IA");setStatusUI("Texto mejorado con IA","");
+    }catch(e){showError("No se pudo mejorar el texto. "+(e.message||e));setStatusUI("Listo","");if(/\(40[0-3]\)/.test(String(e)))keyPanel.style.display="flex";}
     hideProg();improving=false;updateButtonsForMode();
+  }
+  async function summarizeWithAI(){
+    if(improving||summarizing)return;
+    var src=buildText();
+    if(!src){showError("No hay texto que resumir todavía.");return;}
+    if(!geminiKey){keyPanel.style.display="flex";keyInput.focus();return;}
+    summarizing=true;hideError();setStatusUI("Resumiendo con IA...","proc");showProg("Resumiendo con IA...",null,false);updateButtonsForMode();
+    try{
+      var prompt="Resume la siguiente transcripción en español. Empieza con un párrafo breve con la idea general y luego una lista con los puntos clave. Sé claro y fiel al contenido, no inventes.\n\nTranscripción:\n"+src;
+      var s=await geminiGenerate([{text:prompt}]);
+      summaryText=s.trim();renderSummary();summaryBox.scrollIntoView({behavior:"smooth",block:"nearest"});showToast("Resumen generado");setStatusUI("Resumen listo","");
+    }catch(e){showError("No se pudo resumir. "+(e.message||e));setStatusUI("Listo","");if(/\(40[0-3]\)/.test(String(e)))keyPanel.style.display="flex";}
+    hideProg();summarizing=false;updateButtonsForMode();
+  }
+
+  /* ---------- YOUTUBE ---------- */
+  async function ytTranscribe(){
+    if(transcribing||improving||summarizing)return;
+    var url=ytInput.value.trim();
+    if(!url){showError("Pega el enlace del video de YouTube.");return;}
+    if(!/youtu\.?be/.test(url)){showError("Ese enlace no parece de YouTube. Usa una URL como https://www.youtube.com/watch?v=...");return;}
+    if(!geminiKey){keyPanel.style.display="flex";keyInput.focus();showError("Necesitas tu clave de Gemini para transcribir desde YouTube. Pégala en el recuadro de abajo.");return;}
+    resetAI();segments=[];interim="";accumMs=0;runningSince=null;renderStats();renderTranscript();
+    transcribing=true;hideError();setStatusUI("Transcribiendo video...","proc");showProg("La IA está viendo el video, esto puede tardar...",null,false);updateButtonsForMode();
+    try{
+      var langName=whisperLang()==="english"?"inglés":"español";
+      var prompt="Transcribe completamente el audio de este video de YouTube en "+langName+". Devuelve solo la transcripción, con buena puntuación y separación en párrafos, sin marcas de tiempo ni comentarios.";
+      var text=await geminiGenerate([{text:prompt},{fileData:{fileUri:url}}]);
+      segments=[{text:text.trim(),t:0}];renderTranscript();renderStats();setStatusUI("Transcripción completa","");
+    }catch(e){showError("No se pudo transcribir el video. Puede ser privado, muy largo, o exceder el plan gratuito. "+(e.message||e));setStatusUI("Listo","");}
+    hideProg();transcribing=false;updateButtonsForMode();
   }
 
   /* ---------- MODE SWITCH ---------- */
   function setMode(m){
-    if(transcribing||capturing||improving)return;
+    if(transcribing||capturing||improving||summarizing)return;
     if(mode==="mic"&&statusState!=="idle")halt("idle");
     mode=m;
     modeTabs.forEach(function(t){t.classList.toggle("active",t.getAttribute("data-mode")===m);});
-    modeDesc.textContent=m==="mic"?"Transcribe en vivo lo que capta el micrófono. Funciona en teléfono y computadora.":m==="system"?"Captura el audio que suena en tu computadora (una pestaña, un video, una llamada). Solo en escritorio.":"Sube un archivo de audio y transcríbelo. El texto aparece al terminar.";
+    modeDesc.textContent=m==="mic"?"Transcribe en vivo lo que capta el micrófono. Funciona en teléfono y computadora.":m==="system"?"Captura el audio que suena en tu computadora (una pestaña, un video, una llamada). Solo en escritorio.":m==="file"?"Sube un archivo de audio y transcríbelo. El texto aparece al terminar.":"Pega el enlace de un video de YouTube y la IA lo transcribe. Funciona con videos públicos que tengan subtítulos o audio claro.";
     ctrlMic.style.display=m==="mic"?"":"none";
     ctrlSystem.style.display=m==="system"?"":"none";
     ctrlFile.style.display=m==="file"?"":"none";
-    qualityField.style.display=m==="mic"?"none":"";
+    ctrlYouTube.style.display=m==="youtube"?"":"none";
+    qualityField.style.display=(m==="system"||m==="file")?"":"none";
     accumMs=0;runningSince=null;hideProg();hideError();renderStats();
-    if(m==="mic"&&!SR){showError("Tu navegador no es compatible con el reconocimiento de voz en vivo. Usa Chrome o Edge, o prueba los modos de sistema y archivo.");}
+    if(m==="mic"&&!SR){showError("Tu navegador no es compatible con el reconocimiento de voz en vivo. Usa Chrome o Edge, o prueba los otros modos.");}
     if(m==="system"&&!systemSupported()){showError("La captura del audio del sistema solo funciona en computadora con Chrome o Edge, no en teléfono.");}
     setStatusUI("Listo","");updateButtonsForMode();
   }
@@ -527,26 +590,30 @@
   primaryBtn.onclick=function(){if(statusState==="recording"){halt("paused");}else{begin();}};
   stopBtn.onclick=function(){halt("idle");};
   sysBtn.onclick=function(){if(capturing){stopSystemCapture();}else{startSystemCapture();}};
+  ytBtn.onclick=function(){ytTranscribe();};
   cancelBtn.onclick=function(){cancelFlag=true;};
   modeTabs.forEach(function(t){t.onclick=function(){setMode(t.getAttribute("data-mode"));};});
   langSelect.onchange=function(){if(recognition&&mode==="mic"&&statusState==="recording"){recognition.lang=langSelect.value;try{recognition.stop();}catch(e){}}};
   qualitySelect.onchange=function(){if(loadedModel!==qualitySelect.value){transcriber=null;loadedModel=null;}};
   tsToggle.onchange=function(e){showTimestamps=e.target.checked;renderTranscript();};
   improveBtn.onclick=function(){improveWithAI();};
+  summarizeBtn.onclick=function(){summarizeWithAI();};
   viewToggle.onclick=function(){viewOriginal=!viewOriginal;renderTranscript();updateActions();updateImproveUI();};
-  keySave.onclick=function(){var k=keyInput.value.trim();if(!k)return;geminiKey=k;keyPanel.style.display="none";improveWithAI();};
+  keySave.onclick=function(){var k=keyInput.value.trim();if(!k)return;geminiKey=k;keyPanel.style.display="none";showToast("Clave guardada para esta sesión");};
+  summaryCopy.onclick=function(){if(!summaryText)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(summaryText).then(function(){showToast("Resumen copiado");},function(){});}};
+  summaryClose.onclick=function(){summaryText=null;renderSummary();};
 
   copyBtn.onclick=function(){var text=buildText();if(!text)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){showToast("Texto copiado");},function(){fallbackCopy(text);});}else{fallbackCopy(text);}};
   function fallbackCopy(text){var ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");showToast("Texto copiado");}catch(e){}document.body.removeChild(ta);}
   downloadBtn.onclick=function(){var text=buildText();if(!text)return;var blob=new Blob([text],{type:"text/plain;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="transcripcion-"+new Date().toISOString().slice(0,10)+".txt";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast("Archivo descargado");};
-  clearBtn.onclick=function(){if(!confirmClear){confirmClear=true;updateActions();setTimeout(function(){confirmClear=false;updateActions();},2600);return;}confirmClear=false;cancelFlag=true;if(mode==="mic"&&statusState!=="idle")halt("idle");segments=[];interim="";accumMs=0;runningSince=null;resetImproved();renderStats();renderTranscript();updateButtonsForMode();};
+  clearBtn.onclick=function(){if(!confirmClear){confirmClear=true;updateActions();setTimeout(function(){confirmClear=false;updateActions();},2600);return;}confirmClear=false;cancelFlag=true;if(mode==="mic"&&statusState!=="idle")halt("idle");segments=[];interim="";accumMs=0;runningSince=null;resetAI();renderStats();renderTranscript();updateButtonsForMode();};
 
   themeBtn.onclick=function(){applyTheme(theme==="dark"?"light":"dark");};
   infoClose.onclick=function(){infobar.classList.remove("show");};
 
   /* ---------- INIT ---------- */
   applyTheme("dark");
-  noteEl.innerHTML='<b>Nota:</b> el micrófono es instantáneo y necesita internet. Los modos de sistema y archivo descargan un modelo y procesan dentro de tu dispositivo. La mejora con IA envía el texto a Google Gemini solo en ese paso.';
+  noteEl.innerHTML='<b>Nota:</b> el micrófono es instantáneo. Sistema y archivo procesan dentro de tu dispositivo con un modelo local. YouTube, mejorar y resumir envían el texto o el enlace a Google Gemini.';
   if(inIframe){infoText.textContent="Esta es una vista previa donde el micrófono y la captura no funcionan. Prueba la herramienta en tu sitio publicado (https).";infobar.classList.add("show");}
   else if(isFile){infoText.textContent="Abriste el archivo como file://. El modo micrófono no funciona ahí; sírvelo desde http://localhost o https (por ejemplo tu sitio de GitHub Pages).";infobar.classList.add("show");}
   setMode("mic");
