@@ -8,7 +8,7 @@
 #   bash scripts/fetchLocalVoice.sh
 set -euo pipefail
 
-VOICE="vits-piper-es_MX-ald-medium"   # masculina, español de México
+VOICE="kokoro-multi-lang-v1_0"   # Kokoro v1.0; locutor em_alex (sid 29), masculino en español
 BASE="https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models"
 DIR="$(cd "$(dirname "$0")/.." && pwd)/assets/tts"
 

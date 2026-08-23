@@ -50,8 +50,14 @@ const FFPROBE: string = (await import('ffprobe-static')).default.path;
 // ============================================================================
 type Provider = 'openai' | 'gemini' | 'local';
 
-/** Voz local: masculina, espanol de Mexico (F0 ~146 Hz). */
-const LOCAL_VOICE_DIR = resolve(ROOT, 'assets/tts/vits-piper-es_MX-ald-medium');
+/**
+ * Voz local. Kokoro v1.0 multilingue, locutor `em_alex` (sid 29): masculina,
+ * espanol, F0 ~135 Hz. Se eligio sobre las voces piper por ser bastante mas
+ * natural y por necesitar mucho menos ajuste de velocidad para caber en la
+ * ventana, que es lo que hacia sonar artificial a la version anterior.
+ */
+const LOCAL_VOICE_DIR = resolve(ROOT, 'assets/tts/kokoro-multi-lang-v1_0');
+const LOCAL_VOICE_SID = Number(process.env.TTS_SID ?? 29);
 
 const pickProvider = (): { provider: Provider; key: string } | null => {
   const forced = process.env.TTS_PROVIDER?.toLowerCase();
@@ -94,7 +100,12 @@ const synthesizeLocalBatch = async (
   mkdirSync(SEGMENT_DIR, { recursive: true });
   writeFileSync(
     jobFile,
-    JSON.stringify({ voiceDir: LOCAL_VOICE_DIR, speed: globalSpeed, jobs })
+    JSON.stringify({
+      voiceDir: LOCAL_VOICE_DIR,
+      sid: LOCAL_VOICE_SID,
+      speed: globalSpeed,
+      jobs,
+    })
   );
 
   const { stdout } = await execFileAsync(
@@ -279,24 +290,43 @@ const trimSilence = async (input: string, output: string): Promise<void> => {
   await execFileAsync(FFMPEG, [
     '-y', '-i', input,
     '-af',
-    'silenceremove=start_periods=1:start_silence=0.02:start_threshold=-45dB:' +
+    // Umbral suave y 60 ms de margen: recorta el silencio sobrante sin
+    // cortar el ataque de la primera palabra ni la caida de la ultima.
+    'silenceremove=start_periods=1:start_silence=0.06:start_threshold=-50dB:' +
       'detection=peak,areverse,' +
-      'silenceremove=start_periods=1:start_silence=0.02:start_threshold=-45dB:' +
+      'silenceremove=start_periods=1:start_silence=0.06:start_threshold=-50dB:' +
       'detection=peak,areverse',
     '-ar', '48000', '-ac', '1',
     output,
   ]);
 };
 
-/** Analisis de sonoridad en dos pasadas: -14 LUFS exacto y sin recorte. */
-const measureLoudness = async (file: string) => {
+/**
+ * Nivel medio del segmento, en dBFS.
+ *
+ * Cada enunciado se sintetiza por separado y sale con un nivel algo distinto.
+ * Al encadenarlos, esos saltos de volumen suenan a montaje. Se miden aqui para
+ * igualarlos en la mezcla.
+ */
+const measureMeanVolume = async (file: string): Promise<number> => {
   const { stderr } = await execFileAsync(FFMPEG, [
     '-i', file,
-    '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json',
+    '-af', 'volumedetect',
     '-f', 'null', '-',
   ]);
-  const json = stderr.slice(stderr.lastIndexOf('{'), stderr.lastIndexOf('}') + 1);
-  return JSON.parse(json) as Record<string, string>;
+  const match = /mean_volume:\s*(-?[\d.]+) dB/.exec(stderr);
+  return match ? Number(match[1]) : -20;
+};
+
+/** Sonoridad integrada (LUFS) medida con ebur128. */
+const measureIntegrated = async (file: string): Promise<number> => {
+  const { stderr } = await execFileAsync(FFMPEG, [
+    '-i', file,
+    '-af', 'ebur128=framelog=quiet',
+    '-f', 'null', '-',
+  ]);
+  const match = /I:\s*(-?[\d.]+) LUFS/.exec(stderr);
+  return match ? Number(match[1]) : -23;
 };
 
 const main = async (): Promise<void> => {
@@ -337,7 +367,7 @@ const main = async (): Promise<void> => {
 
   console.log(
     provider === 'local'
-      ? `voz local: ${model}`
+      ? `voz local: ${model} (sid ${LOCAL_VOICE_SID})`
       : `modelo de voz seleccionado en tiempo de ejecucion: ${model}`
   );
 
@@ -390,35 +420,104 @@ const main = async (): Promise<void> => {
    */
   const maxSpeed = provider === 'local' ? 1.5 : 1.08;
 
+  // Se apunta un poco por debajo del presupuesto: la sintesis tiene algo de
+  // variabilidad y conviene caer dentro de la ventana con margen.
+  const aim = speechBudget * 0.985;
+
+  interface Attempt {
+    speed: number;
+    durations: number[];
+    placed: ReturnType<typeof fitTimeline>;
+  }
+
+  /**
+   * La sintesis no es determinista entre pasadas, asi que no se puede
+   * reproducir un intento anterior volviendo a generarlo: se guarda copia de
+   * los WAV del mejor intento y se restauran al final.
+   */
+  const snapshotBest = (): void => {
+    for (const segment of NARRATION) {
+      copyFileSync(
+        resolve(SEGMENT_DIR, `${segment.id}.wav`),
+        resolve(SEGMENT_DIR, `${segment.id}.best.wav`)
+      );
+    }
+  };
+
+  const restoreBest = (): void => {
+    for (const segment of NARRATION) {
+      copyFileSync(
+        resolve(SEGMENT_DIR, `${segment.id}.best.wav`),
+        resolve(SEGMENT_DIR, `${segment.id}.wav`)
+      );
+    }
+  };
+
+  const evaluate = async (candidate: number): Promise<Attempt> => {
+    const measured = await synthesizeAll(candidate);
+    return {
+      speed: candidate,
+      durations: measured,
+      placed: fitTimeline(measured),
+    };
+  };
+
   let speed = 1.0;
-  let durations = await synthesizeAll(speed);
-  let spoken = durations.reduce((a, d) => a + d, 0);
+  let attempt = await evaluate(speed);
+  let spoken = attempt.durations.reduce((a, d) => a + d, 0);
   console.log(
-    `  pasada 1: ${spoken.toFixed(2)}s de habla (objetivo ${speechBudget.toFixed(2)}s)`
+    `  pasada 1: ${spoken.toFixed(2)}s de habla (objetivo ${aim.toFixed(2)}s)`
   );
 
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const ratio = spoken / speechBudget;
-    if (ratio <= 1.005 && ratio >= 0.97) break;
+  // De todos los intentos nos quedamos con el que ENCAJA usando la velocidad
+  // MAS BAJA: cuanto menos se comprime la locucion, mas natural suena.
+  let best: Attempt | null = null;
+  if (attempt.placed.fits) {
+    best = attempt;
+    snapshotBest();
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const ratio = spoken / aim;
+    if (best && ratio <= 1.0) break;
+
     const next = Math.min(
       maxSpeed,
       Math.max(0.8, Math.round(speed * ratio * 1000) / 1000)
     );
-    if (Math.abs(next - speed) < 0.005) break;
+    if (Math.abs(next - speed) < 0.004) break;
+
     speed = next;
     console.log(`  recalibrando a speed=${speed}`);
-    durations = await synthesizeAll(speed);
-    spoken = durations.reduce((a, d) => a + d, 0);
-    console.log(`  -> ${spoken.toFixed(2)}s de habla`);
+    attempt = await evaluate(speed);
+    spoken = attempt.durations.reduce((a, d) => a + d, 0);
+    console.log(
+      `  -> ${spoken.toFixed(2)}s de habla, la voz termina en ${attempt.placed.speechEnd.toFixed(2)}s`
+    );
+
+    if (attempt.placed.fits && (!best || speed < best.speed)) {
+      best = attempt;
+      snapshotBest();
+    }
   }
 
-  NARRATION.forEach((segment, i) => {
-    process.stdout.write(
-      `  ${segment.id} ${durations[i].toFixed(2)}s  ${segment.text.slice(0, 44)}\n`
-    );
-  });
+  // Si ningun intento encajo, se usa el ultimo disponible.
+  const chosen = best ?? attempt;
+  speed = chosen.speed;
 
-  const placed = fitTimeline(durations);
+  if (!best) {
+    console.warn('  ningun intento entro en la ventana; se usa el mas corto.');
+  } else {
+    console.log(`  elegido speed=${speed} (la menor compresion que encaja)`);
+  }
+
+  // Se restauran los WAV del intento elegido, de modo que audio, duraciones y
+  // linea de tiempo procedan exactamente de la misma pasada.
+  if (best && attempt.speed !== chosen.speed) restoreBest();
+  const durations = chosen.durations;
+  const placedFit = chosen.placed;
+
+  const placed = placedFit;
   if (!placed.fits) {
     console.warn(
       `AVISO: la voz termina en ${placed.speechEnd.toFixed(2)}s, fuera de la ventana ` +
@@ -427,17 +526,39 @@ const main = async (): Promise<void> => {
   }
 
   // --- Montaje sobre una base de 60 s exactos ------------------------------
+  // Igualacion de nivel: todos los segmentos al mismo volumen medio, para que
+  // el encadenado no suene a trozos pegados.
+  const levels = await Promise.all(
+    placed.segments.map((segment) =>
+      measureMeanVolume(resolve(SEGMENT_DIR, `${segment.id}.wav`))
+    )
+  );
+  const sorted = [...levels].sort((a, b) => a - b);
+  const targetLevel = sorted[Math.floor(sorted.length / 2)];
+  const spread = Math.max(...levels) - Math.min(...levels);
+  console.log(
+    `  nivel entre segmentos: ${spread.toFixed(1)} dB de diferencia -> igualado a ${targetLevel.toFixed(1)} dB`
+  );
+
   const inputs: string[] = [];
   const filters: string[] = [];
   placed.segments.forEach((segment, i) => {
     inputs.push('-i', resolve(SEGMENT_DIR, `${segment.id}.wav`));
     const delayMs = Math.round(segment.start * 1000);
-    filters.push(`[${i}:a]aresample=48000,adelay=${delayMs}|${delayMs}[s${i}]`);
+    // Correccion acotada: no se fuerza mas de 6 dB sobre ningun segmento.
+    const gain = Math.max(-6, Math.min(6, targetLevel - levels[i]));
+    filters.push(
+      `[${i}:a]volume=${gain.toFixed(2)}dB,aresample=48000,adelay=${delayMs}|${delayMs}[s${i}]`
+    );
   });
   const mixInputs = placed.segments.map((_, i) => `[s${i}]`).join('');
   filters.push(
     `${mixInputs}amix=inputs=${placed.segments.length}:normalize=0:dropout_transition=0[mix]`,
-    `[mix]apad,atrim=0:${DURATION_SECONDS},asetpts=N/SR/TB[out]`
+    // Compresion suave de locucion. La voz sintetizada tiene un factor de
+    // cresta alto: sin esto no se puede llegar a -14 LUFS sin superar el pico
+    // real de -1.5 dBTP. Ademas asienta la voz en el altavoz de un movil.
+    `[mix]acompressor=threshold=-20dB:ratio=2.5:attack=10:release=200:makeup=3[cmp]`,
+    `[cmp]apad,atrim=0:${DURATION_SECONDS},asetpts=N/SR/TB[out]`
   );
 
   const mixed = resolve(AUDIO_DIR, 'narration.mix.wav');
@@ -449,20 +570,49 @@ const main = async (): Promise<void> => {
     mixed,
   ]);
 
-  // --- Normalizacion a -14 LUFS (dos pasadas) ------------------------------
-  console.log('  normalizando a -14 LUFS...');
-  const m = await measureLoudness(mixed);
+  // --- Normalizacion a -14 LUFS -------------------------------------------
+  //
+  // Se mide la sonoridad, se aplica una ganancia estatica y se remata con un
+  // limitador a -1.5 dBTP. `loudnorm` en modo lineal se quedaba 1.6 dB corto
+  // porque recortaba la ganancia para respetar el techo de pico; medir y
+  // corregir es exacto y comprobable.
+  const TARGET_LUFS = -14;
   const final = resolve(AUDIO_DIR, 'narration.wav');
-  await execFileAsync(FFMPEG, [
-    '-y', '-i', mixed,
-    '-af',
-    `loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${m.input_i}:measured_TP=${m.input_tp}:` +
-      `measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:` +
-      `offset=${m.target_offset}:linear=true:print_format=summary,` +
-      `apad,atrim=0:${DURATION_SECONDS}`,
-    '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le',
-    final,
-  ]);
+
+  // ffmpeg no puede leer y escribir el mismo archivo, asi que las pasadas
+  // alternan entre dos destinos temporales.
+  const scratch = [
+    resolve(AUDIO_DIR, 'narration.n0.wav'),
+    resolve(AUDIO_DIR, 'narration.n1.wav'),
+  ];
+
+  let source = mixed;
+  let achieved = await measureIntegrated(mixed);
+  console.log(`  mezcla: ${achieved.toFixed(1)} LUFS`);
+
+  for (let pass = 0; pass < 3; pass++) {
+    const gain = TARGET_LUFS - achieved;
+    if (Math.abs(gain) < 0.25) break;
+
+    const target = scratch[pass % 2];
+    await execFileAsync(FFMPEG, [
+      '-y', '-i', source,
+      '-af',
+      `volume=${gain.toFixed(2)}dB,` +
+        // Limitador de pico: evita recorte tras la ganancia.
+        `alimiter=limit=0.79:attack=5:release=60:level=0,` +
+        `apad,atrim=0:${DURATION_SECONDS}`,
+      '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le',
+      target,
+    ]);
+
+    achieved = await measureIntegrated(target);
+    console.log(`  pasada ${pass + 1}: ${achieved.toFixed(1)} LUFS`);
+    source = target;
+  }
+
+  copyFileSync(source, final);
+  console.log(`  sonoridad final: ${achieved.toFixed(1)} LUFS`);
 
   copyFileSync(final, resolve(PUBLIC_AUDIO, 'narration.wav'));
 

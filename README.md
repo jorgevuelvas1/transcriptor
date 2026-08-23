@@ -25,12 +25,33 @@ No había ninguna credencial de TTS en el entorno **y además la salida de red
 hacia `api.openai.com` y la API de Gemini está bloqueada**, así que ni con una
 clave se podría llamar a esas APIs desde aquí.
 
-La narración se generó con una **voz neuronal local** (piper/VITS vía
-sherpa-onnx, `es_MX-ald-medium`): masculina, español de México, F0 ≈ 146 Hz.
-Cumple «voz masculina, español latinoamericano neutro», pero **no** admite
-instrucciones de entonación, así que el registro de «analista internacional»
-está aproximado solo por ritmo (el giro y las tres frases finales van más
-lentos). Para la versión definitiva conviene rehacerla con OpenAI o Gemini.
+La narración se generó con una **voz neuronal local**: Kokoro v1.0
+multilingüe vía sherpa-onnx, locutor `em_alex` (sid 29) — masculina, español,
+F0 ≈ 135 Hz. Se eligió midiendo el tono fundamental de las candidatas y
+comparando cuánta compresión de ritmo necesitaba cada una.
+
+**Limitación conocida.** Kokoro no admite instrucciones de entonación, así que
+el registro de «analista internacional» está aproximado solo por ritmo (el giro
+y las tres frases finales van más lentos). Además, el guion es denso —332
+sílabas— y hay que comprimir la locución un 18 % para que quepa en la ventana.
+Ambas cosas se notan. Para la versión definitiva conviene rehacerla con OpenAI
+o Gemini, que sí aceptan dirección de voz.
+
+### Por qué esta voz y no otra
+
+| Opción | Compresión necesaria | Resultado |
+|---|---|---|
+| piper `es_MX-ald-medium` | ×1.27 | descartada: modelo más simple y más compresión |
+| Kokoro `em_alex` (sid 29) | **×1.18** | elegida |
+
+Medido con reconocimiento de voz sobre la misma voz y el mismo ASR, la
+cobertura de palabras cae al comprimir: 61.8 % a ×1.0, 56.4 % a ×1.18 y 50.9 %
+a ×1.27. El techo del ASR (whisper-tiny) es ese ~62 %, así que la cifra sirve
+para comparar, no como medida absoluta.
+
+Para bajar la compresión se recortaron los huecos no editoriales al mínimo
+—conservando las tres pausas que pide el guion— y se apuró la ventana de voz
+hasta 59.2 s.
 
 ### Para rehacer la voz con OpenAI o Gemini
 
@@ -59,7 +80,7 @@ solo actúa como respaldo. Nada más del proyecto cambia.
 
 ```bash
 pip install sherpa-onnx
-bash scripts/fetchLocalVoice.sh   # ~67 MB, desde GitHub releases
+bash scripts/fetchLocalVoice.sh   # ~349 MB, desde GitHub releases
 npm run voice
 ```
 
@@ -248,6 +269,6 @@ Registradas en `src/data/sources.ts` y embebidas como metadatos del MP4.
 - 60.000 s exactos · 1800 frames · 30 fps
 - 1080×1920 (9:16), `yuv420p`, BT.709
 - Vídeo H.264 (CRF 20, preset `slow`) · Audio AAC 192 kbps
-- Narración normalizada a -14 LUFS (medido: -14.3 LUFS, LRA 1.5 LU), sin recorte
+- Narración normalizada a -14 LUFS (medido: -14.4 LUFS, LRA 1.7 LU, pico -4.0 dBFS)
 - Subtítulos en español: 4–7 palabras por bloque, máximo 2 líneas
 - Safe area de TikTok: 10 % superior, 18 % inferior, columna derecha libre

@@ -31,8 +31,13 @@ export const round3 = (n: number): number => Math.round(n * 1000) / 1000;
 export const VOICE_WINDOW = {
   minEnd: 58.0,
   maxEnd: 59.3,
-  /** Objetivo: deja ~1.4 s de respiracion visual y frame final. */
-  targetEnd: 58.6,
+  /**
+   * Objetivo: deja ~1 s de respiracion visual y frame final.
+   *
+   * Apurar la ventana reduce cuanto hay que comprimir la locucion, que es lo
+   * que delata a una voz sintetica. Es preferible a acelerarla.
+   */
+  targetEnd: 59.2,
   /** Silencio inicial antes de la primera palabra. */
   leadIn: 0.3,
   /** Separacion minima entre segmentos consecutivos. */

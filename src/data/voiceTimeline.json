@@ -1,10 +1,10 @@
 {
   "source": "measured",
-  "generatedAt": "2026-08-23T12:10:41.472Z",
+  "generatedAt": "2026-08-23T18:09:06.351Z",
   "provider": "local",
-  "model": "vits-piper-es_MX-ald-medium",
-  "speed": 1.269,
-  "speechEnd": 58.628,
+  "model": "kokoro-multi-lang-v1_0",
+  "speed": 1.18,
+  "speechEnd": 59.2,
   "fits": true,
   "segments": [
     {
@@ -12,104 +12,104 @@
       "scene": 1,
       "text": "¿Por qué el presidente de Taiwán eligió una pequeña isla a menos de dos kilómetros de China para hablar de fuerza militar?",
       "start": 0.3,
-      "end": 6.786,
-      "duration": 6.486
+      "end": 6.673,
+      "duration": 6.373
     },
     {
       "id": "s02",
       "scene": 2,
       "text": "Porque Kinmen no es solo historia.",
-      "start": 6.926,
-      "end": 8.935,
-      "duration": 2.009
+      "start": 7.45,
+      "end": 9.407,
+      "duration": 1.957
     },
     {
       "id": "s03",
       "scene": 3,
       "text": "Es una advertencia sobre la disuasión.",
-      "start": 9.355,
-      "end": 11.828,
-      "duration": 2.473
+      "start": 10.033,
+      "end": 12.32,
+      "duration": 2.287
     },
     {
       "id": "s04",
       "scene": 3,
       "text": "En 1958, fuerzas chinas bombardearon estas islas",
-      "start": 11.958,
-      "end": 16.509,
-      "duration": 4.551
+      "start": 12.42,
+      "end": 16.613,
+      "duration": 4.193
     },
     {
       "id": "s05",
       "scene": 4,
       "text": "y arrastraron a Estados Unidos a una crisis por un territorio que incluso funcionarios estadounidenses consideraban militarmente vulnerable.",
-      "start": 16.629,
-      "end": 24.145,
-      "duration": 7.515
+      "start": 16.713,
+      "end": 24.617,
+      "duration": 7.904
     },
     {
       "id": "s06",
       "scene": 5,
       "text": "Sesenta y ocho años después, Lai Ching-te volvió a Kinmen",
-      "start": 24.345,
-      "end": 27.674,
-      "duration": 3.329
+      "start": 24.737,
+      "end": 28.284,
+      "duration": 3.547
     },
     {
       "id": "s07",
       "scene": 6,
       "text": "mientras Taiwán propone un presupuesto de defensa récord, superior a un billón de dólares taiwaneses.",
-      "start": 27.804,
-      "end": 33.121,
-      "duration": 5.317
+      "start": 28.384,
+      "end": 33.849,
+      "duration": 5.465
     },
     {
       "id": "s08",
       "scene": 7,
       "text": "Pero quizá Beijing no sea el único destinatario.",
-      "start": 33.571,
-      "end": 36.23,
-      "duration": 2.659
+      "start": 34.299,
+      "end": 37.336,
+      "duration": 3.037
     },
     {
       "id": "s09",
       "scene": 8,
       "text": "El Parlamento, controlado por la oposición, ya ha frenado partes del gasto militar adicional.",
-      "start": 36.51,
-      "end": 42.129,
-      "duration": 5.619
+      "start": 37.496,
+      "end": 42.831,
+      "duration": 5.335
     },
     {
       "id": "s10",
       "scene": 9,
       "text": "Y eso cambia la historia.",
-      "start": 42.309,
-      "end": 44.312,
-      "duration": 2.003
+      "start": 42.951,
+      "end": 44.734,
+      "duration": 1.783
     },
     {
       "id": "s11",
       "scene": 9,
       "text": "La pregunta no es solo si Taiwán puede resistir un ataque.",
-      "start": 44.792,
-      "end": 48.09,
-      "duration": 3.297
+      "start": 45.214,
+      "end": 48.547,
+      "duration": 3.333
     },
     {
       "id": "s12",
       "scene": 9,
       "text": "Es si su democracia puede financiar la disuasión antes de que ocurra.",
-      "start": 48.25,
-      "end": 52.07,
-      "duration": 3.82
+      "start": 48.667,
+      "end": 52.657,
+      "duration": 3.99
     },
     {
       "id": "s13",
       "scene": 10,
       "text": "Porque la primera batalla por la seguridad de Taiwán podría librarse en el Parlamento, mucho antes que en el Estrecho.",
-      "start": 52.25,
-      "end": 58.628,
-      "duration": 6.378
+      "start": 52.777,
+      "end": 59.2,
+      "duration": 6.423
     }
   ]
 }

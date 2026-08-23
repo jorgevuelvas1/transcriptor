@@ -7,10 +7,15 @@ el entorno no tiene salida de red hacia esas APIs.
 Recibe un JSON (por ruta en argv[1], o por stdin):
 
     {
-      "voiceDir": "assets/tts/vits-piper-es_MX-ald-medium",
+      "voiceDir": "assets/tts/kokoro-multi-lang-v1_0",
+      "sid": 29,
       "speed": 1.0,
       "jobs": [{"id": "s01", "text": "...", "out": "...", "speed": 1.0}]
     }
+
+Admite dos familias de modelo y las distingue por sus archivos:
+  - Kokoro  (voices.bin presente): mas natural, multilingue.
+  - VITS/piper (solo .onnx + tokens.txt).
 
 y escribe por stdout:
 
@@ -56,16 +61,44 @@ def main() -> None:
     voice_dir = payload["voiceDir"]
     speed = float(payload.get("speed", 1.0))
 
-    config = sherpa_onnx.OfflineTtsConfig(
-        model=sherpa_onnx.OfflineTtsModelConfig(
+    sid = int(payload.get("sid", 0))
+    voices_bin = os.path.join(voice_dir, "voices.bin")
+    threads = max(1, (os.cpu_count() or 2))
+
+    if os.path.exists(voices_bin):
+        # --- Kokoro ---
+        lexicons = [
+            os.path.join(voice_dir, name)
+            for name in ("lexicon-us-en.txt", "lexicon-zh.txt")
+            if os.path.exists(os.path.join(voice_dir, name))
+        ]
+        dict_dir = os.path.join(voice_dir, "dict")
+        model_config = sherpa_onnx.OfflineTtsModelConfig(
+            kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(
+                model=os.path.join(voice_dir, "model.onnx"),
+                voices=voices_bin,
+                tokens=os.path.join(voice_dir, "tokens.txt"),
+                data_dir=os.path.join(voice_dir, "espeak-ng-data"),
+                dict_dir=dict_dir if os.path.isdir(dict_dir) else "",
+                lexicon=",".join(lexicons),
+            ),
+            num_threads=threads,
+            provider="cpu",
+        )
+    else:
+        # --- VITS / piper ---
+        model_config = sherpa_onnx.OfflineTtsModelConfig(
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(
                 model=find_model(voice_dir),
                 tokens=os.path.join(voice_dir, "tokens.txt"),
                 data_dir=os.path.join(voice_dir, "espeak-ng-data"),
             ),
-            num_threads=max(1, (os.cpu_count() or 2)),
+            num_threads=threads,
             provider="cpu",
-        ),
+        )
+
+    config = sherpa_onnx.OfflineTtsConfig(
+        model=model_config,
         # Una frase por vez: asi las pausas internas las controla el montaje,
         # no el sintetizador.
         max_num_sentences=1,
@@ -78,7 +111,7 @@ def main() -> None:
         # `speed` por segmento: permite que el giro y el cierre vayan algo mas
         # lentos, como pide la direccion de voz.
         job_speed = float(job.get("speed", 1.0)) * speed
-        audio = tts.generate(job["text"], sid=0, speed=job_speed)
+        audio = tts.generate(job["text"], sid=sid, speed=job_speed)
         sample_rate = audio.sample_rate
         write_wav(job["out"], audio.samples, sample_rate)
         results.append(
