@@ -1,0 +1,5 @@
+{
+  "hasNarration": false,
+  "file": "audio/narration.wav",
+  "note": "`npm run voice` pone hasNarration en true tras generar y medir la pista."
+}

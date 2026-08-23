@@ -1,0 +1,741 @@
+{
+ "source": "planned",
+ "generatedAt": "2026-08-23T11:11:42.129Z",
+ "blocks": [
+  {
+   "start": 0.3,
+   "end": 2.38,
+   "lines": [
+    [
+     {
+      "t": "¿Por"
+     },
+     {
+      "t": "qué"
+     },
+     {
+      "t": "el"
+     },
+     {
+      "t": "presidente"
+     }
+    ],
+    [
+     {
+      "t": "de"
+     },
+     {
+      "t": "Taiwán"
+     },
+     {
+      "t": "eligió"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 2.38,
+   "end": 4.3,
+   "lines": [
+    [
+     {
+      "t": "una"
+     },
+     {
+      "t": "pequeña"
+     },
+     {
+      "t": "isla"
+     }
+    ],
+    [
+     {
+      "t": "a"
+     },
+     {
+      "t": "menos"
+     },
+     {
+      "t": "de"
+     },
+     {
+      "t": "dos"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 4.3,
+   "end": 5.74,
+   "lines": [
+    [
+     {
+      "t": "kilómetros"
+     },
+     {
+      "t": "de"
+     },
+     {
+      "t": "China"
+     },
+     {
+      "t": "para"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 5.74,
+   "end": 7.02,
+   "lines": [
+    [
+     {
+      "t": "hablar"
+     },
+     {
+      "t": "de"
+     },
+     {
+      "t": "fuerza"
+     },
+     {
+      "t": "militar?"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 7.406,
+   "end": 9.166,
+   "lines": [
+    [
+     {
+      "t": "Porque"
+     },
+     {
+      "t": "Kinmen",
+      "e": true
+     },
+     {
+      "t": "no"
+     }
+    ],
+    [
+     {
+      "t": "es"
+     },
+     {
+      "t": "solo"
+     },
+     {
+      "t": "historia."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 9.586,
+   "end": 11.666,
+   "lines": [
+    [
+     {
+      "t": "Es"
+     },
+     {
+      "t": "una"
+     },
+     {
+      "t": "advertencia"
+     }
+    ],
+    [
+     {
+      "t": "sobre"
+     },
+     {
+      "t": "la"
+     },
+     {
+      "t": "disuasión.",
+      "e": true
+     }
+    ]
+   ]
+  },
+  {
+   "start": 11.796,
+   "end": 15.636,
+   "lines": [
+    [
+     {
+      "t": "En"
+     },
+     {
+      "t": "1958,",
+      "e": true
+     },
+     {
+      "t": "fuerzas"
+     },
+     {
+      "t": "chinas"
+     }
+    ],
+    [
+     {
+      "t": "bombardearon"
+     },
+     {
+      "t": "estas"
+     },
+     {
+      "t": "islas"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 15.756,
+   "end": 18.156,
+   "lines": [
+    [
+     {
+      "t": "y"
+     },
+     {
+      "t": "arrastraron"
+     },
+     {
+      "t": "a"
+     }
+    ],
+    [
+     {
+      "t": "Estados"
+     },
+     {
+      "t": "Unidos"
+     },
+     {
+      "t": "a"
+     },
+     {
+      "t": "una"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 18.156,
+   "end": 20.716,
+   "lines": [
+    [
+     {
+      "t": "crisis"
+     },
+     {
+      "t": "por"
+     },
+     {
+      "t": "un"
+     },
+     {
+      "t": "territorio"
+     }
+    ],
+    [
+     {
+      "t": "que"
+     },
+     {
+      "t": "incluso"
+     },
+     {
+      "t": "funcionarios"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 20.716,
+   "end": 23.916,
+   "lines": [
+    [
+     {
+      "t": "estadounidenses"
+     },
+     {
+      "t": "consideraban"
+     }
+    ],
+    [
+     {
+      "t": "militarmente"
+     },
+     {
+      "t": "vulnerable."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 24.116,
+   "end": 25.716,
+   "lines": [
+    [
+     {
+      "t": "Sesenta"
+     },
+     {
+      "t": "y"
+     },
+     {
+      "t": "ocho"
+     }
+    ],
+    [
+     {
+      "t": "años"
+     },
+     {
+      "t": "después,"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 25.716,
+   "end": 26.996,
+   "lines": [
+    [
+     {
+      "t": "Lai"
+     },
+     {
+      "t": "Ching-te"
+     }
+    ],
+    [
+     {
+      "t": "volvió"
+     },
+     {
+      "t": "a"
+     },
+     {
+      "t": "Kinmen",
+      "e": true
+     }
+    ]
+   ]
+  },
+  {
+   "start": 27.126,
+   "end": 29.686,
+   "lines": [
+    [
+     {
+      "t": "mientras"
+     },
+     {
+      "t": "Taiwán"
+     },
+     {
+      "t": "propone"
+     }
+    ],
+    [
+     {
+      "t": "un"
+     },
+     {
+      "t": "presupuesto"
+     },
+     {
+      "t": "de"
+     },
+     {
+      "t": "defensa"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 29.686,
+   "end": 30.806,
+   "lines": [
+    [
+     {
+      "t": "récord,"
+     },
+     {
+      "t": "superior"
+     },
+     {
+      "t": "a"
+     },
+     {
+      "t": "un"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 30.806,
+   "end": 32.406,
+   "lines": [
+    [
+     {
+      "t": "billón",
+      "e": true
+     },
+     {
+      "t": "de"
+     },
+     {
+      "t": "dólares"
+     }
+    ],
+    [
+     {
+      "t": "taiwaneses."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 32.856,
+   "end": 34.106,
+   "lines": [
+    [
+     {
+      "t": "Pero"
+     },
+     {
+      "t": "quizá"
+     },
+     {
+      "t": "Beijing",
+      "e": true
+     },
+     {
+      "t": "no"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 34.106,
+   "end": 35.892,
+   "lines": [
+    [
+     {
+      "t": "sea"
+     },
+     {
+      "t": "el"
+     },
+     {
+      "t": "único"
+     },
+     {
+      "t": "destinatario."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 36.172,
+   "end": 38.572,
+   "lines": [
+    [
+     {
+      "t": "El"
+     },
+     {
+      "t": "Parlamento,",
+      "e": true
+     },
+     {
+      "t": "controlado"
+     }
+    ],
+    [
+     {
+      "t": "por"
+     },
+     {
+      "t": "la"
+     },
+     {
+      "t": "oposición,"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 38.572,
+   "end": 39.692,
+   "lines": [
+    [
+     {
+      "t": "ya"
+     },
+     {
+      "t": "ha"
+     },
+     {
+      "t": "frenado"
+     },
+     {
+      "t": "partes"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 39.692,
+   "end": 41.292,
+   "lines": [
+    [
+     {
+      "t": "del"
+     },
+     {
+      "t": "gasto"
+     },
+     {
+      "t": "militar"
+     }
+    ],
+    [
+     {
+      "t": "adicional."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 41.472,
+   "end": 43.085,
+   "lines": [
+    [
+     {
+      "t": "Y"
+     },
+     {
+      "t": "eso"
+     },
+     {
+      "t": "cambia"
+     },
+     {
+      "t": "la"
+     },
+     {
+      "t": "historia."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 43.565,
+   "end": 45.536,
+   "lines": [
+    [
+     {
+      "t": "La"
+     },
+     {
+      "t": "pregunta"
+     },
+     {
+      "t": "no"
+     }
+    ],
+    [
+     {
+      "t": "es"
+     },
+     {
+      "t": "solo"
+     },
+     {
+      "t": "si"
+     },
+     {
+      "t": "Taiwán"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 45.536,
+   "end": 47.149,
+   "lines": [
+    [
+     {
+      "t": "puede"
+     },
+     {
+      "t": "resistir"
+     },
+     {
+      "t": "un"
+     },
+     {
+      "t": "ataque."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 47.309,
+   "end": 49.639,
+   "lines": [
+    [
+     {
+      "t": "Es"
+     },
+     {
+      "t": "si"
+     },
+     {
+      "t": "su"
+     },
+     {
+      "t": "democracia"
+     }
+    ],
+    [
+     {
+      "t": "puede"
+     },
+     {
+      "t": "financiar"
+     },
+     {
+      "t": "la"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 49.639,
+   "end": 51.431,
+   "lines": [
+    [
+     {
+      "t": "disuasión",
+      "e": true
+     },
+     {
+      "t": "antes"
+     }
+    ],
+    [
+     {
+      "t": "de"
+     },
+     {
+      "t": "que"
+     },
+     {
+      "t": "ocurra."
+     }
+    ]
+   ]
+  },
+  {
+   "start": 51.611,
+   "end": 54.299,
+   "lines": [
+    [
+     {
+      "t": "Porque"
+     },
+     {
+      "t": "la"
+     },
+     {
+      "t": "primera"
+     }
+    ],
+    [
+     {
+      "t": "batalla"
+     },
+     {
+      "t": "por"
+     },
+     {
+      "t": "la"
+     },
+     {
+      "t": "seguridad"
+     }
+    ]
+   ]
+  },
+  {
+   "start": 54.299,
+   "end": 56.808,
+   "lines": [
+    [
+     {
+      "t": "de"
+     },
+     {
+      "t": "Taiwán"
+     },
+     {
+      "t": "podría"
+     },
+     {
+      "t": "librarse"
+     }
+    ],
+    [
+     {
+      "t": "en"
+     },
+     {
+      "t": "el"
+     },
+     {
+      "t": "Parlamento,",
+      "e": true
+     }
+    ]
+   ]
+  },
+  {
+   "start": 56.808,
+   "end": 58.6,
+   "lines": [
+    [
+     {
+      "t": "mucho"
+     },
+     {
+      "t": "antes"
+     },
+     {
+      "t": "que"
+     }
+    ],
+    [
+     {
+      "t": "en"
+     },
+     {
+      "t": "el"
+     },
+     {
+      "t": "Estrecho."
+     }
+    ]
+   ]
+  }
+ ]
+}

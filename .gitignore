@@ -1,0 +1,24 @@
+# --- secrets ---
+.env
+.env.local
+*.key
+
+# --- deps / build ---
+node_modules/
+.remotion/
+dist/
+
+# --- large raw geodata (re-downloadable via `npm run geo`) ---
+assets/data/*.geojson
+assets/data/*.geo.json
+assets/data/*.json
+
+# --- generated audio ---
+assets/audio/*.wav
+assets/audio/*.mp3
+assets/audio/segments/
+
+# --- render scratch ---
+output/*.log
+output/frames/
+output/stills/

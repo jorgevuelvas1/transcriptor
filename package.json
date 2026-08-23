@@ -1,0 +1,46 @@
+{
+  "name": "taiwan-disuasion-tiktok",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Video geopolitico vertical (TikTok) sobre disuasion de Taiwan - 23 ago 2026",
+  "type": "module",
+  "scripts": {
+    "voice": "tsx scripts/generateVoice.ts",
+    "captions": "tsx scripts/generateCaptions.ts",
+    "render": "tsx scripts/render.ts",
+    "validate": "tsx scripts/validate.ts",
+    "editorial": "tsx scripts/editorialCheck.ts",
+    "geo": "tsx scripts/buildGeography.ts",
+    "studio": "remotion studio",
+    "build": "npm run editorial && npm run render && npm run validate"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.0.0",
+    "@fontsource/ibm-plex-serif": "^5.0.0",
+    "@fontsource/inter": "^5.0.0",
+    "@remotion/bundler": "4.0.515",
+    "@remotion/cli": "4.0.515",
+    "@remotion/renderer": "4.0.515",
+    "d3-geo": "^3.1.1",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "ffmpeg-static": "^5.3.0",
+    "ffprobe-static": "^3.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "4.0.515",
+    "topojson-client": "^3.1.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/d3-scale": "^4.0.8",
+    "@types/d3-shape": "^3.1.6",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/topojson-client": "^3.1.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
