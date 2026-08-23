@@ -9,6 +9,12 @@
  *  Prioridad de proveedor:
  *     1) OPENAI_API_KEY  -> OpenAI Audio Speech API
  *     2) GEMINI_API_KEY  -> Google Gemini API (TTS)
+ *     3) local           -> voz neuronal piper/VITS via sherpa-onnx
+ *
+ *  El proveedor local es un RESPALDO: se usa cuando no hay credencial, o
+ *  cuando el entorno no tiene salida hacia esas APIs. Da una voz masculina
+ *  en espanol de Mexico, pero sin control de entonacion por instrucciones.
+ *  En cuanto exista credencial, `npm run voice` vuelve a la nube.
  *
  *  EL MODELO NO ESTA FIJADO EN EL CODIGO. El script consulta el endpoint de
  *  modelos del proveedor en tiempo de ejecucion y elige el mejor modelo de
@@ -22,7 +28,7 @@
  */
 import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import 'dotenv/config';
 
@@ -42,18 +48,64 @@ const FFPROBE: string = (await import('ffprobe-static')).default.path;
 // ============================================================================
 //  Seleccion de proveedor
 // ============================================================================
-type Provider = 'openai' | 'gemini';
+type Provider = 'openai' | 'gemini' | 'local';
+
+/** Voz local: masculina, espanol de Mexico (F0 ~146 Hz). */
+const LOCAL_VOICE_DIR = resolve(ROOT, 'assets/tts/vits-piper-es_MX-ald-medium');
 
 const pickProvider = (): { provider: Provider; key: string } | null => {
   const forced = process.env.TTS_PROVIDER?.toLowerCase();
   const openai = process.env.OPENAI_API_KEY?.trim();
   const gemini = process.env.GEMINI_API_KEY?.trim();
+  const hasLocal = existsSync(LOCAL_VOICE_DIR);
 
   if (forced === 'openai' && openai) return { provider: 'openai', key: openai };
   if (forced === 'gemini' && gemini) return { provider: 'gemini', key: gemini };
+  if (forced === 'local' && hasLocal) return { provider: 'local', key: '' };
   if (openai) return { provider: 'openai', key: openai };
   if (gemini) return { provider: 'gemini', key: gemini };
+  if (hasLocal) return { provider: 'local', key: '' };
   return null;
+};
+
+/**
+ * Ritmo relativo por segmento para la voz local, que no admite instrucciones
+ * de entonacion. Traduce la direccion de voz a velocidad: el giro y las tres
+ * frases finales van algo mas lentos.
+ */
+const PACE_SPEED: Record<string, number> = {
+  base: 1.0,
+  shift: 0.94,
+  slow: 0.93,
+};
+
+/** Sintesis local por lotes: el modelo se carga una sola vez. */
+const synthesizeLocalBatch = async (
+  globalSpeed: number
+): Promise<Map<string, string>> => {
+  const jobs = NARRATION.map((segment) => ({
+    id: segment.id,
+    text: ttsTextOf(segment),
+    out: resolve(SEGMENT_DIR, `${segment.id}.raw.wav`),
+    speed: PACE_SPEED[segment.pace] ?? 1,
+  }));
+
+  const jobFile = resolve(SEGMENT_DIR, '_job.json');
+  mkdirSync(SEGMENT_DIR, { recursive: true });
+  writeFileSync(
+    jobFile,
+    JSON.stringify({ voiceDir: LOCAL_VOICE_DIR, speed: globalSpeed, jobs })
+  );
+
+  const { stdout } = await execFileAsync(
+    'python3',
+    [resolve(ROOT, 'scripts/localTts.py'), jobFile],
+    { maxBuffer: 64 * 1024 * 1024 }
+  );
+  const parsed = JSON.parse(stdout) as {
+    results: Array<{ id: string; duration: number }>;
+  };
+  return new Map(parsed.results.map((r) => [r.id, String(r.duration)]));
 };
 
 // ============================================================================
@@ -253,7 +305,7 @@ const main = async (): Promise<void> => {
     console.error(
       [
         '',
-        'No hay credenciales de voz disponibles.',
+        'No hay ni credenciales de voz ni modelo local disponible.',
         '',
         'Copia `.env.example` a `.env` y rellena UNA de estas variables:',
         '',
@@ -275,50 +327,98 @@ const main = async (): Promise<void> => {
   mkdirSync(PUBLIC_AUDIO, { recursive: true });
 
   console.log(`proveedor: ${provider}`);
+
   const model =
-    provider === 'openai' ? await discoverOpenAiModel(key) : await discoverGeminiModel(key);
-  console.log(`modelo de voz seleccionado en tiempo de ejecucion: ${model}`);
+    provider === 'openai'
+      ? await discoverOpenAiModel(key)
+      : provider === 'gemini'
+        ? await discoverGeminiModel(key)
+        : basename(LOCAL_VOICE_DIR);
 
-  // --- Sintesis, con un unico reintento acelerando levemente si no cabe -----
-  let speed = 1.0;
-  let placed: ReturnType<typeof fitTimeline> | null = null;
-  let durations: number[] = [];
+  console.log(
+    provider === 'local'
+      ? `voz local: ${model}`
+      : `modelo de voz seleccionado en tiempo de ejecucion: ${model}`
+  );
 
-  for (let attempt = 0; attempt < 3; attempt++) {
-    durations = [];
-    for (const [i, segment] of NARRATION.entries()) {
+  // Presupuesto de habla: lo que queda tras el silencio inicial y las pausas
+  // editoriales. Es el objetivo que debe alcanzar la suma de los segmentos.
+  const pauseTotal = NARRATION.reduce(
+    (acc, segment, i) =>
+      i === NARRATION.length - 1
+        ? acc
+        : acc + Math.max(VOICE_WINDOW.minGap, segment.pauseAfter),
+    0
+  );
+  const speechBudget = VOICE_WINDOW.targetEnd - VOICE_WINDOW.leadIn - pauseTotal;
+
+  /** Sintetiza todos los segmentos y devuelve sus duraciones ya recortadas. */
+  const synthesizeAll = async (globalSpeed: number): Promise<number[]> => {
+    if (provider === 'local') await synthesizeLocalBatch(globalSpeed);
+
+    const out: number[] = [];
+    for (const segment of NARRATION) {
       const raw = resolve(SEGMENT_DIR, `${segment.id}.raw.wav`);
       const clean = resolve(SEGMENT_DIR, `${segment.id}.wav`);
-      const audio =
-        provider === 'openai'
-          ? await synthesizeOpenAi(key, model, ttsTextOf(segment), segment.pace, speed)
-          : await synthesizeGemini(key, model, ttsTextOf(segment), segment.pace);
-      writeFileSync(raw, audio);
+
+      if (provider !== 'local') {
+        const audio =
+          provider === 'openai'
+            ? await synthesizeOpenAi(
+                key,
+                model,
+                ttsTextOf(segment),
+                segment.pace,
+                globalSpeed
+              )
+            : await synthesizeGemini(key, model, ttsTextOf(segment), segment.pace);
+        writeFileSync(raw, audio);
+      }
+
       await trimSilence(raw, clean);
-      const duration = await probeDuration(clean);
-      durations.push(duration);
-      process.stdout.write(
-        `  ${segment.id} ${duration.toFixed(2)}s  ${segment.text.slice(0, 46)}\n`
-      );
-      void i;
+      out.push(await probeDuration(clean));
     }
+    return out;
+  };
 
-    placed = fitTimeline(durations);
-    if (placed.fits) break;
+  /**
+   * Calibracion del ritmo.
+   *
+   * La voz local arranca de un ritmo mas lento que el registro pedido, asi que
+   * se mide una pasada y se deduce la velocidad que da el ritmo objetivo. Para
+   * la nube el margen es minimo (1.08) para no acelerar de forma artificial.
+   */
+  const maxSpeed = provider === 'local' ? 1.5 : 1.08;
 
-    // No se acelera de forma artificial: solo un ajuste minimo y acotado.
-    const needed = placed.speechEnd / VOICE_WINDOW.maxEnd;
-    speed = Math.min(1.08, Math.round(speed * needed * 100) / 100);
-    console.log(
-      `  la voz ocupa ${placed.speechEnd.toFixed(2)}s; reintentando con speed=${speed}`
+  let speed = 1.0;
+  let durations = await synthesizeAll(speed);
+  let spoken = durations.reduce((a, d) => a + d, 0);
+  console.log(
+    `  pasada 1: ${spoken.toFixed(2)}s de habla (objetivo ${speechBudget.toFixed(2)}s)`
+  );
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const ratio = spoken / speechBudget;
+    if (ratio <= 1.005 && ratio >= 0.97) break;
+    const next = Math.min(
+      maxSpeed,
+      Math.max(0.8, Math.round(speed * ratio * 1000) / 1000)
     );
-    if (provider === 'gemini') {
-      console.log('  (Gemini no admite `speed`; se ajustan solo las pausas)');
-      break;
-    }
+    if (Math.abs(next - speed) < 0.005) break;
+    speed = next;
+    console.log(`  recalibrando a speed=${speed}`);
+    durations = await synthesizeAll(speed);
+    spoken = durations.reduce((a, d) => a + d, 0);
+    console.log(`  -> ${spoken.toFixed(2)}s de habla`);
   }
 
-  if (!placed) throw new Error('No se pudo ajustar la linea de tiempo.');
+  NARRATION.forEach((segment, i) => {
+    process.stdout.write(
+      `  ${segment.id} ${durations[i].toFixed(2)}s  ${segment.text.slice(0, 44)}\n`
+    );
+  });
+
+  const placed = fitTimeline(durations);
   if (!placed.fits) {
     console.warn(
       `AVISO: la voz termina en ${placed.speechEnd.toFixed(2)}s, fuera de la ventana ` +

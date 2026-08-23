@@ -13,7 +13,11 @@ assets/data/*.geojson
 assets/data/*.geo.json
 assets/data/*.json
 
+# --- modelos de voz local (se descargan con scripts/fetchLocalVoice.sh) ---
+assets/tts/
+
 # --- generated audio ---
+public/audio/
 assets/audio/*.wav
 assets/audio/*.mp3
 assets/audio/segments/

@@ -9,41 +9,59 @@ dentro de su propio Parlamento, mucho antes que en el Estrecho.
 
 ---
 
-## Estado actual
-
-| Parte | Estado |
-|---|---|
-| Proyecto visual completo (10 escenas, mapas reales, subtítulos) | **Terminado** |
-| Render de 60 s · 1080×1920 · 30 fps · H.264 | **Terminado** |
-| Narración en español | **Pendiente de credencial de TTS** |
-
-No había ninguna credencial de voz en el entorno, así que se ha construido todo
-el proyecto y se ha renderizado el vídeo completo **sin narración**:
+## Entregable
 
 ```
-output/taiwan_disuasion_2026-08-23_sin_voz.mp4
+output/taiwan_disuasion_2026-08-23_tiktok.mp4
+60.054 s · 1080×1920 · 30 fps · H.264 · AAC · 13.0 MB · -14.3 LUFS
 ```
 
-### Para obtener la entrega final con voz
+Se incluye también un render sin narración:
+`output/taiwan_disuasion_2026-08-23_sin_voz.mp4`.
 
-1. Copia `.env.example` a `.env`.
-2. Rellena **una** de estas dos variables:
+### Sobre la voz de esta versión
+
+No había ninguna credencial de TTS en el entorno **y además la salida de red
+hacia `api.openai.com` y la API de Gemini está bloqueada**, así que ni con una
+clave se podría llamar a esas APIs desde aquí.
+
+La narración se generó con una **voz neuronal local** (piper/VITS vía
+sherpa-onnx, `es_MX-ald-medium`): masculina, español de México, F0 ≈ 146 Hz.
+Cumple «voz masculina, español latinoamericano neutro», pero **no** admite
+instrucciones de entonación, así que el registro de «analista internacional»
+está aproximado solo por ritmo (el giro y las tres frases finales van más
+lentos). Para la versión definitiva conviene rehacerla con OpenAI o Gemini.
+
+### Para rehacer la voz con OpenAI o Gemini
+
+En una máquina con salida de red hacia esas APIs:
+
+1. Copia `.env.example` a `.env` y rellena **una** variable:
 
    ```
    OPENAI_API_KEY=...     # primera opción
    GEMINI_API_KEY=...     # alternativa
    ```
 
-3. Ejecuta:
+2. Ejecuta:
 
    ```bash
    npm run voice      # sintetiza, mide y monta la pista de 60 s a -14 LUFS
    npm run captions   # re-sincroniza los subtítulos con el audio real
-   npm run render     # genera output/taiwan_disuasion_2026-08-23_tiktok.mp4
+   npm run render     # regenera el MP4 final
    npm run validate   # comprueba duración, resolución, fps, códecs
    ```
 
-Nada del trabajo ya hecho se rehace: la voz es el único paso que falta.
+El pipeline detecta la credencial y usa la nube automáticamente; la voz local
+solo actúa como respaldo. Nada más del proyecto cambia.
+
+### Reproducir la voz local
+
+```bash
+pip install sherpa-onnx
+bash scripts/fetchLocalVoice.sh   # ~67 MB, desde GitHub releases
+npm run voice
+```
 
 ---
 
@@ -57,8 +75,8 @@ La narración **no** se sintetiza de una sola vez. `npm run voice`:
 3. los coloca en la línea de tiempo respetando las pausas editoriales
    (tras «Porque Kinmen no es solo historia.», antes de «Pero quizá Beijing…»,
    tras «Y eso cambia la historia.») sin solapar nunca dos segmentos;
-4. si la voz no cabe en la ventana de 58.0–59.3 s, hace **un** ajuste acotado de
-   velocidad (máximo 1.08) en lugar de acelerar artificialmente la locución;
+4. calibra el ritmo: mide una pasada y deduce la velocidad que da el ritmo
+   objetivo (tope 1.08 en la nube, para no acelerar de forma artificial);
 5. mezcla todo sobre una base de 60.000 s y normaliza a **-14 LUFS** en dos
    pasadas, sin recorte.
 
@@ -66,9 +84,12 @@ El resultado se escribe en `src/data/voiceTimeline.json` con
 `source: "measured"`, y los subtítulos se regeneran a partir de esos tiempos
 reales.
 
-Mientras no haya credencial, ese archivo contiene una línea de tiempo
-**estimada** por conteo silábico (332 sílabas, ~158 palabras/minuto, la voz
-termina en 58.60 s), suficiente para construir y renderizar todo lo visual.
+En la versión entregada ese archivo ya es **medido**: la calibración convergió
+en `speed = 1.269` y la narración termina en **58.63 s**, dentro de la ventana
+58.0–59.3 s. La voz local parte de un ritmo más lento que el registro pedido,
+así que el script mide una pasada y deduce la velocidad que da el ritmo
+objetivo; para la nube el margen está limitado a 1.08 para no acelerar de
+forma artificial.
 
 ### Selección del modelo de voz
 
@@ -110,6 +131,8 @@ scripts/
   buildGeography.ts  Descarga y recorta la geometría real
   planTimeline.ts    Línea de tiempo estimada
   generateVoice.ts   TTS por segmentos, medición y montaje
+  localTts.py        Voz neuronal local de respaldo (sherpa-onnx)
+  fetchLocalVoice.sh Descarga del modelo de voz local
   generateCaptions.ts Subtítulos de 4-7 palabras
   render.ts          Render del MP4
   validate.ts        Control técnico
@@ -122,6 +145,7 @@ scripts/
 | Comando | Qué hace |
 |---|---|
 | `npm run geo` | Reconstruye la geometría desde las fuentes originales |
+| `bash scripts/fetchLocalVoice.sh` | Descarga la voz neuronal local de respaldo |
 | `npm run editorial` | Control editorial (bloquea el render si falla) |
 | `npm run render -- --silent` | Render sin narración |
 | `npm run render` | Render final |
@@ -224,6 +248,6 @@ Registradas en `src/data/sources.ts` y embebidas como metadatos del MP4.
 - 60.000 s exactos · 1800 frames · 30 fps
 - 1080×1920 (9:16), `yuv420p`, BT.709
 - Vídeo H.264 (CRF 20, preset `slow`) · Audio AAC 192 kbps
-- Narración normalizada a -14 LUFS, sin recorte
+- Narración normalizada a -14 LUFS (medido: -14.3 LUFS, LRA 1.5 LU), sin recorte
 - Subtítulos en español: 4–7 palabras por bloque, máximo 2 líneas
 - Safe area de TikTok: 10 % superior, 18 % inferior, columna derecha libre
